@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">PT Timer</string>
+
+    <string name="button_read">Read</string>
+    <string name="button_write">Write</string>
+    <string name="timer_data_label">Timer data</string>
+    <string name="button_open">Open File</string>
+    <string name="button_save">Save File</string>
+    <string name="button_delete">Delete</string>
+
+    <string name="label_model">Model</string>
+    <string name="label_id">ID</string>
+    <string name="label_set">Set</string>
+</resources>

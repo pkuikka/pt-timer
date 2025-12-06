@@ -1,0 +1,224 @@
+package com.example.pt_timer.ui
+
+import android.Manifest
+import android.app.Application
+import android.util.Log
+import androidx.annotation.RequiresPermission
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.pt_timer.BtCommunication
+import com.example.pt_timer.PtTimerApplication
+import com.example.pt_timer.data.TimerData
+import com.example.pt_timer.data.UserPreferencesRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+// Main screen UI state
+class UiViewModel(
+    application: Application,
+    private val userPreferencesRepository: UserPreferencesRepository
+) : AndroidViewModel(application) {
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private val btCommunication = BtCommunication(application.applicationContext)
+
+    init {
+        resetMainScreen()
+
+        viewModelScope.launch {
+            userPreferencesRepository.timerWriteDelayMillis.collect { timerWriteDelayMillis ->
+                // 3. Update the UI state with the value from the repository
+                _uiState.update { currentState ->
+                    currentState.copy(writeCommunicationDelay = timerWriteDelayMillis)
+                }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.selectedBtDevice.collect { deviceName ->
+                _uiState.update { currentState ->
+                    currentState.copy(selectedBtDevice = deviceName)
+                }
+            }
+        }
+    }
+
+    fun resetMainScreen() {
+
+    }
+
+    // Function to update the list of BT devices in the state
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    fun refreshPairedDevices() {
+        val pairedDevices =
+            btCommunication.getPairedDevices() // Assume this function exists in BtCommunication
+        _uiState.update { currentState ->
+            currentState.copy(btDevices = pairedDevices)
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    fun read() {
+        // Read the timer data via bluetooth
+        btCommunication.connectDevice(selectedDevice = uiState.value.selectedBtDevice) { isSuccess ->
+            if (isSuccess) {
+                btCommunication.timerCommunication { updatedTimerData ->
+                    // This block of code will execute LATER,
+                    // when onDataReceived(dataString) is called from BtCommunication.
+                    processIncomingPacket(updatedTimerData)
+                }
+            }
+        }
+    }
+
+    @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+    fun write() {
+        val currentTimerData = _uiState.value.timerData
+        val packetToSend = currentTimerData.toPacket()
+
+        btCommunication.connectDevice(selectedDevice = uiState.value.selectedBtDevice) { isSuccess ->
+            if (isSuccess) {
+                btCommunication.timerCommunication(
+                    packetToSend = packetToSend,
+                    writeDelay = uiState.value.writeCommunicationDelay.toLong()
+                ) {} /* updatedTimerData ->
+                    // This block of code will execute LATER,
+                    // when onDataReceived(dataString) is called from BtCommunication.
+                    _uiState.update { currentState ->
+                        currentState.copy(timerDataAsString = updatedTimerData)
+                    }
+                }*/
+            }
+        }
+    }
+
+    fun onDelayChanged(delay: Float) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveLayoutPreference(delay)
+        }
+    }
+
+    fun onDeviceSelected(deviceName: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveSelectedDevice(deviceName)
+        }
+    }
+
+    fun onModelNameChanged(newName: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                timerData = currentState.timerData.copy(modelName = newName)
+            )
+        }
+    }
+
+    fun onModelIdChanged(newId: String) {
+        if (newId.isEmpty()) return
+        _uiState.update { currentState ->
+            currentState.copy(
+                timerData = currentState.timerData.copy(modelId = newId.toIntOrNull() ?: 0)
+            )
+        }
+    }
+
+    fun onModelSetChanged(newSet: String) {
+        if (newSet.isEmpty()) return
+        _uiState.update { currentState ->
+            currentState.copy(
+                timerData = currentState.timerData.copy(modelSet = newSet.toIntOrNull() ?: 0)
+            )
+        }
+    }
+
+    fun onGridItemChanged(index: Int, newValue: String) {
+        val newIntValue = newValue.toIntOrNull() ?: 0
+
+        val row = index / 6
+        val col = index % 6
+
+        Log.i("UiViewModel", "onGridItemChanged: row=$row, col=$col, newValue=$newValue")
+
+        // We only process changes if they are NOT in the header row or column.
+        if (row > 0 && col > 0) {
+            _uiState.update { currentState ->
+                val updatedTimerData = when (col) {
+                    1 -> { // Time values (which are Doubles, so we need to handle them differently)
+                        val newDoubleValue = newValue.toDoubleOrNull() ?: 0.0
+                        val updatedList = currentState.timerData.timeValues.toMutableList().apply {
+                            this[row - 1] = newDoubleValue
+                        }
+                        currentState.timerData.copy(timeValues = updatedList)
+                    }
+                    2 -> { // Servo 1 values
+                        val updatedList = currentState.timerData.servo1Values.toMutableList().apply {
+                            this[row - 1] = newIntValue
+                        }
+                        currentState.timerData.copy(servo1Values = updatedList)
+                    }
+                    3 -> { // Servo 2 values
+                        val updatedList = currentState.timerData.servo2Values.toMutableList().apply {
+                            this[row - 1] = newIntValue
+                        }
+                        currentState.timerData.copy(servo2Values = updatedList)
+                    }
+                    4 -> { // Servo 3 values
+                        val updatedList = currentState.timerData.servo3Values.toMutableList().apply {
+                            this[row - 1] = newIntValue
+                        }
+                        currentState.timerData.copy(servo3Values = updatedList)
+                    }
+                    5 -> { // Servo 4 values
+                        val updatedList = currentState.timerData.servo4Values.toMutableList().apply {
+                            this[row - 1] = newIntValue
+                        }
+                        currentState.timerData.copy(servo4Values = updatedList)
+                    }
+                    // We assume there are only 5 editable columns.
+                    else -> currentState.timerData // No change if the column is out of expected range.
+                }
+
+                // Update the UiState with the new TimerData object.
+                currentState.copy(timerData = updatedTimerData)
+            }
+        }
+        // If it's a header cell (row or col is 0), do nothing.
+    }
+
+    private fun processIncomingPacket(packetBytes: ByteArray) {
+        try {
+            // Use the factory function to create the TimerData object
+            val newTimerData = TimerData.fromPacket(packetBytes)
+
+            Log.i("DataParsing", "Updated data: $newTimerData")
+            // Update the UI state with the newly parsed data
+            _uiState.update { currentState ->
+                currentState.copy(timerData = newTimerData)
+            }
+        } catch (e: IllegalArgumentException) {
+            // Handle the case where the packet is the wrong size
+            Log.e("DataParsing", "Received invalid packet: ${e.message}")
+        } catch (e: Exception) {
+            // Handle any other potential parsing errors
+            Log.e("DataParsing", "Failed to parse timer data packet.", e)
+        }
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as PtTimerApplication)
+                UiViewModel(
+                    application = application,
+                    userPreferencesRepository = application.userPreferencesRepository
+                )
+            }
+        }
+    }
+}
+
