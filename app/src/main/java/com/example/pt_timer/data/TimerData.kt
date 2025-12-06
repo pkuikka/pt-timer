@@ -66,7 +66,8 @@ data class TimerData(
     //   ...
     // 209 + 7 = Row 25 time, step lines, and values for servos 1 - 4
     // Map them to more easier column values and force step value always to be 0
-    val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { 12.4 },
+    //val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { 12.4 },
+    val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { it.toDouble() },
     val servo1Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 125 },
     val servo2Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 126 },
     val servo3Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 127 },
@@ -88,9 +89,9 @@ data class TimerData(
     val timerVersion: String = "c2.515", // 252 - 256 = timer software version
 
     // These values are sent after the 256 byte timer data
-    val batteryVoltage: Int = 0,
-    val batteryLowestVoltage: Int = 0,
-    val currentTemperature: Int = 0,
+    val batteryVoltage: Float = 0f,
+    val batteryLowestVoltage: Float = 0f,
+    val currentTemperature: Float = 0f,
     val usedDt: Int = 0, // Counts together configured DT time + DIP switches
 ) {
     companion object {
@@ -195,9 +196,9 @@ data class TimerData(
                 row3Label = readString(242..246),
                 row4Label = readString(247..251),
                 timerVersion = readString(252..255), // Last byte is 255 (index 0-255)
-                batteryVoltage = getUnsignedByte(257),
-                batteryLowestVoltage = getUnsignedByte(258),
-                currentTemperature = getUnsignedByte(259) + 100 - 273, // Kelvin to Celsius conversion
+                batteryVoltage = getUnsignedByte(257).toFloat(),
+                batteryLowestVoltage = getUnsignedByte(258).toFloat(),
+                currentTemperature = getUnsignedByte(259) + 100 - 273.toFloat(), // Kelvin to Celsius conversion
                 usedDt = ((getUnsignedByte(260) * 256) + getUnsignedByte(261)) / 10, // count 2 bytes to DT seconds,
             )
         }
