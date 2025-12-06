@@ -18,7 +18,6 @@ import com.example.pt_timer.R
 
 @Composable
 fun ServoSetupScreen(
-    uiState: UiState,
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
@@ -41,12 +40,9 @@ fun ServoSetupScreen(
 @Preview(showBackground = true)
 @Composable
 fun ServoSetupScreenPreview() {
-    // Create a fake UiState for the preview
-    val fakeUiState = UiState()
 
     // Call the stateless composable with fake data and empty lambdas
     ServoSetupScreen(
-        uiState = fakeUiState,
     )
 }
 

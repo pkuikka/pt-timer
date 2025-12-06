@@ -1,6 +1,5 @@
 package com.example.pt_timer.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -9,12 +8,6 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import com.example.pt_timer.ui.heme.Pink40
-import com.example.pt_timer.ui.heme.Pink80
-import com.example.pt_timer.ui.heme.Purple40
-import com.example.pt_timer.ui.heme.Purple80
-import com.example.pt_timer.ui.heme.PurpleGrey40
-import com.example.pt_timer.ui.heme.PurpleGrey80
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -46,7 +39,7 @@ fun PTTimerTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }

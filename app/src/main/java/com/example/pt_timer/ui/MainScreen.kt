@@ -50,6 +50,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.text.style.TextOverflow
@@ -169,7 +170,7 @@ fun TabLayout(
     modifier: Modifier = Modifier
 ) {
     // Persisting the selected tab index
-    var state by rememberSaveable { mutableStateOf(0) }
+    var state by rememberSaveable { mutableIntStateOf(0) }
     val titles = listOf("Timer setup", "Servo setup", "information")
 
     Column(

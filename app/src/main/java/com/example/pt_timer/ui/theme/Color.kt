@@ -1,4 +1,4 @@
-package com.example.pt_timer.ui.heme
+package com.example.pt_timer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

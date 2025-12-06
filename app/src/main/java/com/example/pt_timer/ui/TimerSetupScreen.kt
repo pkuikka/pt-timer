@@ -18,7 +18,6 @@ import com.example.pt_timer.R
 
 @Composable
 fun TimerSetupScreen(
-    uiState: UiState,
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
@@ -42,11 +41,9 @@ fun TimerSetupScreen(
 @Composable
 fun TimerSetupScreenPreview() {
     // Create a fake UiState for the preview
-    val fakeUiState = UiState()
 
     // Call the stateless composable with fake data and empty lambdas
     TimerSetupScreen(
-        uiState = fakeUiState,
     )
 }
 

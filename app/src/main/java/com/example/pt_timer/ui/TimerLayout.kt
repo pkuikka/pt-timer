@@ -80,8 +80,6 @@ fun TimerLayoutRefresh(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
 ) {
-    //val fakeUiState = uiState.timerData
-    val timerData = uiState.timerData
     // Optionally, you could update the ViewModel with new TimerData
     TimerLayout(uiState, onModelNameChanged, onModelIdChanged, onModelSetChanged)
 }
