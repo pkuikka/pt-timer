@@ -15,7 +15,7 @@ android {
     applicationVariants.all {
         outputs.all {
             val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "pt-timer-0_01.apk"
+            output.outputFileName = "pt-timer-0_2.apk"
             // or for App Bundles (.aab)
             // output.outputFileName = "pt-timer-${variant.versionName}.aab"
         }
@@ -26,7 +26,9 @@ android {
         minSdk = 32
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.2.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -49,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
