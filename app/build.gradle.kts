@@ -1,3 +1,13 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+fun getTimestamp(): String {
+    val sdf = SimpleDateFormat("yyMMddHH", Locale.US)
+    return sdf.format(Date())
+}
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -22,11 +32,14 @@ android {
     }
 
     defaultConfig {
+        val majorVersion = 0
+        val minorVersion = 2
+        versionCode = majorVersion * 1000 + minorVersion // Example version code
+        versionName = "$majorVersion.$minorVersion.${getTimestamp()}"
+
         applicationId = "com.example.pt_timer"
         minSdk = 32
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
