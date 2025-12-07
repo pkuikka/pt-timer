@@ -63,12 +63,10 @@ fun TimerLayout(
             val dt = uiState.timerData.usedDt
             val batteryVoltage = uiState.timerData.batteryVoltage
             val batteryLowestVoltage = uiState.timerData.batteryLowestVoltage
-            val currentTemperature = uiState.timerData.currentTemperature
 
             Text(text = "DT $dt", style = MaterialTheme.typography.bodyMedium)
             Text(text = "${batteryVoltage / 10}V", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Min $batteryLowestVoltage / 10", style = MaterialTheme.typography.bodyMedium)
-            //Text(text = "Temp. $currentTemperature", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Min ${batteryLowestVoltage / 10}", style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
