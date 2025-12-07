@@ -3,7 +3,6 @@ package com.example.pt_timer.ui
 import android.Manifest
 import android.app.Application
 import android.content.Context
-import android.net.Uri
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
@@ -11,7 +10,6 @@ import androidx.annotation.RequiresPermission
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -25,7 +23,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import android.provider.DocumentsContract
+import java.io.File
+import java.io.FileNotFoundException
 
 class UiViewModel(
     application: Application,
@@ -35,6 +34,13 @@ class UiViewModel(
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
     private val btCommunication = BtCommunication(application.applicationContext)
+
+    fun getSavedFilesList() {
+        val internalDir = applicationContext.filesDir
+        val files = internalDir.listFiles { _, name -> name.endsWith(".json") }
+            ?.map { it.name } ?: emptyList()
+        _uiState.update { it.copy(savedFiles = files) }
+    }
 
     init {
         resetMainScreen()
@@ -216,67 +222,73 @@ class UiViewModel(
         }
     }
 
-    fun loadJsonFromFile(uri: Uri) {
+    fun loadJsonFromFile(filename: String) {
         viewModelScope.launch {
             try {
-                // Use the applicationContext to get a ContentResolver and open the input stream
-                val contentResolver = applicationContext.contentResolver
-                contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val jsonString = inputStream.bufferedReader().use { it.readText() }
-                    val loadedTimerData = Json.decodeFromString<TimerData>(jsonString)
+                val file = File(applicationContext.filesDir, filename)
+                val jsonString = file.bufferedReader().use { it.readText() }
+                val loadedTimerData = Json.decodeFromString<TimerData>(jsonString)
 
-                    _uiState.update { currentState ->
-                        currentState.copy(timerData = loadedTimerData)
-                    }
+                _uiState.update { it.copy(timerData = loadedTimerData) }
+                Log.i("UiViewModel", "File loaded: $filename")
+                android.os.Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "Loaded: $filename", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: FileNotFoundException) {
+                Log.e("UiViewModel", "File not found: $filename", e)
+                android.os.Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "Error: File not found.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Handle potential errors, e.g., file not found, invalid JSON
-                // You could expose an error state to the UI here if needed
-                e.printStackTrace()
+                Log.e("UiViewModel", "Failed to load file: $filename", e)
             }
         }
     }
 
-    fun saveJsonToFile(uri: Uri) {
-        try {
-            val currentTimerData = _uiState.value.timerData
-            val json = Json {
-                prettyPrint = true
-                encodeDefaults = true // Force encoding of properties that have default values.
-            }
-            val jsonString = json.encodeToString(currentTimerData)
-            Log.i("UiViewModel", "File content to be saved $jsonString")
+    fun saveJsonToFile() {
+        // We now generate the filename internally from the modelName
+        val currentTimerData = _uiState.value.timerData
+        val filename = currentTimerData.modelName.replace(Regex("[^a-zA-Z0-9.-]"), "_") + ".json"
 
-            application.applicationContext.contentResolver.openOutputStream(uri)?.use { outputStream ->
+        try {
+            val json = Json { prettyPrint = true; encodeDefaults = true }
+            val jsonString = json.encodeToString(currentTimerData)
+            Log.i("UiViewModel", "File content to be saved to $filename: $jsonString")
+
+            applicationContext.openFileOutput(filename, Context.MODE_PRIVATE).use { outputStream ->
                 outputStream.write(jsonString.toByteArray())
             }
-            Log.i("UiViewModel", "Successfully saved file to $uri")
+
+            Log.i("UiViewModel", "Successfully saved file to $filename")
             android.os.Handler(Looper.getMainLooper()).post {
-                Toast.makeText(application.applicationContext, "File saved successfully!", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "File saved successfully!", Toast.LENGTH_LONG).show()
             }
+            getSavedFilesList()
+
         } catch (e: Exception) {
             Log.e("UiViewModel", "Failed to save file", e)
             android.os.Handler(Looper.getMainLooper()).post {
-                Toast.makeText(application.applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    fun deleteFile(uri: Uri) {
+    fun deleteFile(filename: String) {
         viewModelScope.launch {
             try {
-                // This line shows a system confirmation dialog before deleting.
-                val deleted = DocumentsContract.deleteDocument(applicationContext.contentResolver, uri)
-
-                // Add a Toast to give the user feedback.
-                if (deleted) {
-                    android.os.Handler(Looper.getMainLooper()).post {
-                        Toast.makeText(application.applicationContext, "File deleted.", Toast.LENGTH_SHORT).show()
+                val file = File(applicationContext.filesDir, filename)
+                if (file.exists()) {
+                    val deleted = file.delete()
+                    if (deleted) {
+                        Log.i("UiViewModel", "File deleted: $filename")
+                        android.os.Handler(Looper.getMainLooper()).post {
+                            Toast.makeText(applicationContext, "File deleted.", Toast.LENGTH_SHORT).show()
+                        }
+                        getSavedFilesList()
                     }
                 }
             } catch (e: Exception) {
-                // This catch block will be entered if the user cancels the confirmation dialog.
-                Log.e("UiViewModel", "File deletion cancelled or failed.", e)
+                Log.e("UiViewModel", "File deletion failed.", e)
             }
         }
     }

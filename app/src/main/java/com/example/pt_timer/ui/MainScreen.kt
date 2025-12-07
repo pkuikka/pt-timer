@@ -4,10 +4,8 @@ package com.example.pt_timer.ui
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,10 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,11 +28,13 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -55,6 +58,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
@@ -69,46 +73,47 @@ fun MainScreen(
 ) {
     val mainScreenUiState by mainScreenViewModel.uiState.collectAsState()
 
-    val fileOpenerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(), // Use OpenDocument
-        onResult = { uri: Uri? ->
-            // The user has selected a file; the result is handled here.
-            uri?.let {
-                mainScreenViewModel.loadJsonFromFile(it)
-            }
-        }
-    )
+    var showDialog by remember { mutableStateOf(false) }
+    var dialogAction by remember { mutableStateOf<((String) -> Unit)?>(null) }
+    var dialogTitle by remember { mutableStateOf("") }
+    val onDismissDialog = remember { { showDialog = false } }
 
-    val fileSaverLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json"),
-        onResult = { uri: Uri? ->
-            uri?.let {
-                mainScreenViewModel.saveJsonToFile(it)
-            }
-        }
-    )
+    fun openFileSelectionDialog(title: String, action: (String) -> Unit) {
+        dialogTitle = title
+        dialogAction = action
+        showDialog = true
+    }
 
-    val fileDeleterLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-        onResult = { uri: Uri? ->
-            uri?.let {
-                mainScreenViewModel.deleteFile(it)
+    fun handleFileSelection(filename: String) {
+        dialogAction?.invoke(filename) // Perform the stored action (Open or Delete)
+        showDialog = false             // Close the dialog
+    }
+
+    LaunchedEffect(Unit) {
+        mainScreenViewModel.getSavedFilesList()
+    }
+
+    if (showDialog) {
+        FileSelectionDialog(
+            title = dialogTitle,
+            files = mainScreenUiState.savedFiles,
+            onDismiss = onDismissDialog,
+            onFileSelected = { filename ->
+                handleFileSelection(filename)
             }
-        }
-    )
+        )
+    }
 
     MainScreenContent(
         uiState = mainScreenUiState,
         onReadClick = { mainScreenViewModel.read() },
         onWriteClick = { mainScreenViewModel.write() },
         onOpenClick = {
-            fileOpenerLauncher.launch(arrayOf("application/json"))
+            openFileSelectionDialog("Open file", mainScreenViewModel::loadJsonFromFile)
         },
-        onSaveClick = { suggestedFileName ->
-            fileSaverLauncher.launch(suggestedFileName)
-        },
+        onSaveClick = { mainScreenViewModel.saveJsonToFile() },
         onDeleteClick = {
-            fileDeleterLauncher.launch(arrayOf("application/json"))
+            openFileSelectionDialog("Delete file", mainScreenViewModel::deleteFile)
         },
         onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
         onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
@@ -132,7 +137,7 @@ fun MainScreenContent(
     onReadClick: () -> Unit,
     onWriteClick: () -> Unit,
     onOpenClick: () -> Unit,
-    onSaveClick: (String) -> Unit,
+    onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onDeviceSelected: (String) -> Unit,
     onRefreshDevices: () -> Unit,
@@ -176,7 +181,6 @@ fun MainScreenContent(
             BottomButtonsPanel(
                 btDeviceList = uiState.btDevices,
                 selectedDevice = uiState.selectedBtDevice,
-                modelName = uiState.timerData.modelName,
                 onDeviceSelected = onDeviceSelected,
                 onReadClick = onReadClick,
                 onWriteClick = onWriteClick,
@@ -320,12 +324,11 @@ fun ServoSetupTabContent(
 fun BottomButtonsPanel(
     btDeviceList: List<String>,
     selectedDevice: String,
-    modelName: String,
     onDeviceSelected: (String) -> Unit,
     onReadClick: () -> Unit,
     onWriteClick: () -> Unit,
     onOpenClick: () -> Unit,
-    onSaveClick: (String) -> Unit,
+    onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -403,30 +406,78 @@ fun BottomButtonsPanel(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            OutlinedButton(
-                onClick = {
-                    onOpenClick()
-                }
-            ) {
+            OutlinedButton(onClick = onOpenClick) {
                 Text(text = stringResource(R.string.button_open), fontSize = 14.sp)
             }
-            // Save Button
             OutlinedButton(
                 onClick = {
                     // force focus cleaning, so that last edit on grid is noticed
                     focusManager.clearFocus()
-                    val suggestedFileName = modelName.replace(Regex("[^a-zA-Z0-9.-]"), "_") + ".json"
-                    onSaveClick(suggestedFileName)
+                    onSaveClick()
                 })
             {
                 Text(text = stringResource(R.string.button_save), fontSize = 14.sp)
             }
-            OutlinedButton(
-                onClick = {
-                    onDeleteClick()
-                }
-            ) {
+            OutlinedButton(onClick = onDeleteClick) {
                 Text(text = stringResource(R.string.button_delete), fontSize = 14.sp)
+            }
+        }
+    }
+}
+
+@Composable
+fun FileSelectionDialog(
+    title: String,
+    files: List<String>,
+    onDismiss: () -> Unit,
+    onFileSelected: (String) -> Unit
+) {
+    if (files.isEmpty()) {
+        AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text("There are no saved files to select.") },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("OK")
+            }
+        }
+    )
+        return
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.medium) {
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(16.dp)
+                )
+                LazyColumn(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    items(files) { filename ->
+                        Text(
+                            text = filename,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onFileSelected(filename) }
+                                .padding(vertical = 12.dp)
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    OutlinedButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                }
             }
         }
     }
