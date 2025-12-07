@@ -59,6 +59,60 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
 
+@SuppressLint("MissingPermission")
+@Composable
+fun MainScreen(
+    onSettingsClick: () -> Unit,
+    mainScreenViewModel: UiViewModel = viewModel(
+        factory = UiViewModel.Factory
+    )
+) {
+    val mainScreenUiState by mainScreenViewModel.uiState.collectAsState()
+
+    val fileOpenerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(), // Use OpenDocument
+        onResult = { uri: Uri? ->
+            // The user has selected a file; the result is handled here.
+            uri?.let {
+                mainScreenViewModel.loadJsonFromFile(it)
+            }
+        }
+    )
+
+    val fileSaverLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                mainScreenViewModel.saveJsonToFile(it)
+            }
+        }
+    )
+
+    MainScreenContent(
+        uiState = mainScreenUiState,
+        onReadClick = { mainScreenViewModel.read() },
+        onWriteClick = { mainScreenViewModel.write() },
+        onOpenClick = {
+            fileOpenerLauncher.launch(arrayOf("application/json"))
+        },
+        onSaveClick = { suggestedFileName ->
+            fileSaverLauncher.launch(suggestedFileName)
+        },
+        //onDeleteClick = { /* TODO: Call mainScreenViewModel.saveFile() */ },
+        onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
+        onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
+        onSettingsClick = onSettingsClick,
+        onModelNameChanged = { newName -> mainScreenViewModel.onModelNameChanged(newName) },
+        onModelIdChanged = { newIdString -> mainScreenViewModel.onModelIdChanged(newIdString) },
+        onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
+        onGridItemChanged = { index, newValue ->
+            mainScreenViewModel.onGridItemChanged(
+                index,
+                newValue
+            )
+        },
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -141,61 +195,6 @@ fun MainScreenContent(
             )
         }
     }
-}
-
-@SuppressLint("MissingPermission")
-@Composable
-fun MainScreen(
-    onSettingsClick: () -> Unit,
-    mainScreenViewModel: UiViewModel = viewModel(
-        factory = UiViewModel.Factory
-    )
-) {
-    val mainScreenUiState by mainScreenViewModel.uiState.collectAsState()
-
-    val fileOpenerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(), // Use OpenDocument
-        onResult = { uri: Uri? ->
-            // The user has selected a file; the result is handled here.
-            uri?.let {
-                mainScreenViewModel.loadJsonFromFile(it)
-            }
-        }
-    )
-
-    val fileSaverLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json"),
-        onResult = { uri: Uri? ->
-            uri?.let {
-                mainScreenViewModel.saveJsonToFile(it)
-            }
-        }
-    )
-
-    MainScreenContent(
-        uiState = mainScreenUiState,
-        onReadClick = { mainScreenViewModel.read() },
-        onWriteClick = { mainScreenViewModel.write() },
-        onOpenClick = {
-            fileOpenerLauncher.launch(arrayOf("application/json"))
-        },
-        onSaveClick = { suggestedFileName ->
-            fileSaverLauncher.launch(suggestedFileName)
-        },
-        //onDeleteClick = { /* TODO: Call mainScreenViewModel.saveFile() */ },
-        onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
-        onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
-        onSettingsClick = onSettingsClick,
-        onModelNameChanged = { newName -> mainScreenViewModel.onModelNameChanged(newName) },
-        onModelIdChanged = { newIdString -> mainScreenViewModel.onModelIdChanged(newIdString) },
-        onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
-        onGridItemChanged = { index, newValue ->
-            mainScreenViewModel.onGridItemChanged(
-                index,
-                newValue
-            )
-        },
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
