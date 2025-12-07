@@ -38,7 +38,7 @@ android {
         versionName = "$majorVersion.$minorVersion.${getTimestamp()}"
 
         applicationId = "com.example.pt_timer"
-        minSdk = 32
+        minSdk = 30
         targetSdk = 36
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -84,6 +84,7 @@ dependencies {
     // ... other dependencies
     implementation("androidx.navigation:navigation-compose:2.9.6") // Or the latest stable version
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation(libs.material)
 
     testImplementation(libs.junit)
 

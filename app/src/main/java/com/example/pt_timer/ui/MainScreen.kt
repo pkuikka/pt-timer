@@ -336,7 +336,7 @@ fun ServoSetupTabContent(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
 ) {
-    TimerLayoutRefresh(
+    ServoSetupScreen(
         uiState,
         onModelNameChanged,
         onModelIdChanged,
