@@ -175,6 +175,10 @@ class UiViewModel(
         val col = index % 6
 
         Log.i("UiViewModel", "onGridItemChanged: row=$row, col=$col, newValue=$newValue")
+        if (col == 0)
+            _uiState.update { it.copy(selectedRow = row) }
+        else
+            _uiState.update { it.copy(selectedRow = -1) }
 
         // We only process changes if they are NOT in the header row or column.
         if (row > 0 && col > 0) {
@@ -309,6 +313,78 @@ class UiViewModel(
             } catch (e: Exception) {
                 Log.e("UiViewModel", "File deletion failed.", e)
             }
+        }
+    }
+
+    fun deleteRow() {
+        val rowToDelete = _uiState.value.selectedRow
+
+        // make sure multiple deletions don't happen with single row select
+        _uiState.update { it.copy(selectedRow = -1) }
+
+        if (rowToDelete == -1) {
+            // No row is selected, do nothing or show a Toast
+            Log.w("UiViewModel", "Delete action called but no row is selected.")
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(applicationContext, "Please select a row to delete from column 1.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            return
+        }
+
+        // Check that 'static' rows are not deleted
+        if ((rowToDelete <= 4 && _uiState.value.timerData.modelType == 2) ||
+            (rowToDelete <= 3 && _uiState.value.timerData.modelType == 1)) {
+            Log.i("UiViewModel", "Cannot delete this row. Row=$rowToDelete")
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(applicationContext, "Cannot delete this row.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            return
+        }
+
+        Log.i("UiViewModel", "Deleting row $rowToDelete...")
+        _uiState.update { currentState ->
+            val currentTimerData = currentState.timerData
+            var newNumberOfRows = currentTimerData.numberOfDataRows - 1
+            if (newNumberOfRows < 0) newNumberOfRows = 0
+
+            // Create mutable copies of the lists to modify them
+            val newTimeValues = currentTimerData.timeValues.toMutableList()
+            val newServo1Values = currentTimerData.servo1Values.toMutableList()
+            val newServo2Values = currentTimerData.servo2Values.toMutableList()
+            val newServo3Values = currentTimerData.servo3Values.toMutableList()
+            val newServo4Values = currentTimerData.servo4Values.toMutableList()
+
+            // Shift all data rows up starting from the deleted row's index
+            // Note: The loop should go up to 'newNumberOfRows'
+            for (i in (rowToDelete - 1) until newNumberOfRows) {
+                newTimeValues[i] = newTimeValues[i + 1]
+                newServo1Values[i] = newServo1Values[i + 1]
+                newServo2Values[i] = newServo2Values[i + 1]
+                newServo3Values[i] = newServo3Values[i + 1]
+                newServo4Values[i] = newServo4Values[i + 1]
+            }
+
+            // Remember to move the bunt safety line if it's affected
+            var newSkipBuntGoToRow = currentTimerData.skipBuntGoToRow
+            if (rowToDelete < newSkipBuntGoToRow) {
+                newSkipBuntGoToRow -= 1
+            }
+
+            // Create a new TimerData object with all the updated values
+            val updatedTimerData = currentTimerData.copy(
+                numberOfDataRows = newNumberOfRows,
+                timeValues = newTimeValues,
+                servo1Values = newServo1Values,
+                servo2Values = newServo2Values,
+                servo3Values = newServo3Values,
+                servo4Values = newServo4Values,
+                skipBuntGoToRow = newSkipBuntGoToRow
+            )
+
+            // Update the state with the new TimerData object
+            currentState.copy(timerData = updatedTimerData)
         }
     }
 

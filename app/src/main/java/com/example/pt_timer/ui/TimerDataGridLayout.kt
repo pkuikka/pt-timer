@@ -97,8 +97,7 @@ fun TimerDataGridLayout(
             modifier = Modifier.fillMaxWidth()
         ) {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(6),
-                modifier = Modifier.height(500.dp) // Adjust height as needed
+                columns = GridCells.Fixed(6)
             ) {
                 //val uiState.displayGridItems
                 items(displayGridItems.size) { index ->
@@ -142,15 +141,15 @@ fun TimerDataGridLayout(
     }
 }
 
+/*
 @Composable
 fun TimerDataGridLayoutRefresh(
     uiState: UiState,
     onGridItemChanged: (Int, String) -> Unit,
-
 ) {
     // Optionally, you could update the ViewModel with new TimerData
     TimerDataGridLayout(uiState, onGridItemChanged)
-}
+}*/
 
 @Preview
 @Composable
