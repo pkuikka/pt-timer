@@ -78,6 +78,9 @@ fun MainScreen(
     var dialogTitle by remember { mutableStateOf("") }
     val onDismissDialog = remember { { showDialog = false } }
 
+    val showMismatchDialog by mainScreenViewModel.showMismatchDialog.collectAsState()
+    val mismatchMessage by mainScreenViewModel.mismatchDialogMessage.collectAsState()
+
     fun openFileSelectionDialog(title: String, action: (String) -> Unit) {
         dialogTitle = title
         dialogAction = action
@@ -100,6 +103,28 @@ fun MainScreen(
             onDismiss = onDismissDialog,
             onFileSelected = { filename ->
                 handleFileSelection(filename)
+            }
+        )
+    }
+
+    if (showMismatchDialog) {
+        AlertDialog(
+            onDismissRequest = { mainScreenViewModel.onDismissMismatchDialog() },
+            title = { Text("Model mismatch") },
+            text = { Text(mismatchMessage) },
+            confirmButton = {
+                Button(
+                    onClick = { mainScreenViewModel.onConfirmMismatchDialog() }
+                ) {
+                    Text("OK (overwrite)")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { mainScreenViewModel.onDismissMismatchDialog() }
+                ) {
+                    Text("Cancel")
+                }
             }
         )
     }

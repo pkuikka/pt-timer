@@ -35,6 +35,26 @@ class UiViewModel(
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
     private val btCommunication = BtCommunication(application.applicationContext)
 
+    private val _showMismatchDialog = MutableStateFlow(false)
+    val showMismatchDialog: StateFlow<Boolean> = _showMismatchDialog.asStateFlow()
+    private val _mismatchDialogMessage = MutableStateFlow("")
+    val mismatchDialogMessage: StateFlow<String> = _mismatchDialogMessage.asStateFlow()
+
+    private var onConfirmWriteAction: (() -> Unit)? = null
+    private var onCancelWriteAction: (() -> Unit)? = null
+
+    fun onConfirmMismatchDialog() {
+        onConfirmWriteAction?.invoke()
+        _showMismatchDialog.value = false
+    }
+
+    fun onDismissMismatchDialog() {
+        onConfirmWriteAction = null
+        onCancelWriteAction?.invoke()
+        onCancelWriteAction = null
+        _showMismatchDialog.value = false
+    }
+
     fun getSavedFilesList() {
         val internalDir = applicationContext.filesDir
         val files = internalDir.listFiles { _, name -> name.endsWith(".json") }
@@ -81,11 +101,9 @@ class UiViewModel(
         // Read the timer data via bluetooth
         btCommunication.connectDevice(selectedDevice = uiState.value.selectedBtDevice) { isSuccess ->
             if (isSuccess) {
-                btCommunication.timerCommunication { updatedTimerData ->
-                    // This block of code will execute LATER,
-                    // when onDataReceived(dataString) is called from BtCommunication.
-                    processIncomingPacket(updatedTimerData)
-                }
+                btCommunication.timerCommunication(
+                    onDataReceived = { processIncomingPacket(it) }
+                )
             }
         }
     }
@@ -99,14 +117,15 @@ class UiViewModel(
             if (isSuccess) {
                 btCommunication.timerCommunication(
                     packetToSend = packetToSend,
-                    writeDelay = uiState.value.writeCommunicationDelay.toLong()
-                ) {} /* updatedTimerData ->
-                    // This block of code will execute LATER,
-                    // when onDataReceived(dataString) is called from BtCommunication.
-                    _uiState.update { currentState ->
-                        currentState.copy(timerDataAsString = updatedTimerData)
+                    writeDelay = uiState.value.writeCommunicationDelay.toLong(),
+                    onDataReceived = { }, // NO UI updates on write operations
+                    onConfirmationRequired = { message, onConfirm, onCancel ->
+                        onConfirmWriteAction = onConfirm
+                        onCancelWriteAction = onCancel
+                        _mismatchDialogMessage.value = message
+                        _showMismatchDialog.value = true
                     }
-                }*/
+                )
             }
         }
     }

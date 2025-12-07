@@ -127,10 +127,12 @@ class BtCommunication(private val context: Context) {
 
     fun timerCommunication(packetToSend: ByteArray? = null,
                            writeDelay: Long = 100,
-                           onDataReceived: (ByteArray) -> Unit) {
+                           onDataReceived: (ByteArray) -> Unit,
+                           onConfirmationRequired: ((message: String, onConfirm: () -> Unit, onCancel: () -> Unit) -> Unit)? = null) {
         var stopWorker = false
         var retryCount = 0
-        var readData = ""
+
+        fun getUnsignedByte(index: Int, convertBytes: ByteArray): Int = convertBytes[index].toInt() and 0xFF
 
         if (btSerialInputStream == null || btSerialOutputStream == null) {
             Handler(Looper.getMainLooper()).post {
@@ -161,12 +163,8 @@ class BtCommunication(private val context: Context) {
                             val buffer = String(packetBytes, charset("utf-8"))
                             Log.i(TAG, "Bytes available: 263, Buffer: $buffer")
 
-                            // Convert data to integer string
-                            for (i in 2..262) {
-                                readData = readData + packetBytes[i].toInt().toString() + ","
-                            }
                             Handler(Looper.getMainLooper()).post {
-                                toastAndLog("Read timer data: $readData")
+                                toastAndLog("Timer read.")
                             }
 
                             // We must post it to the main thread to be safe
@@ -175,17 +173,54 @@ class BtCommunication(private val context: Context) {
                                     val processedPacket = packetBytes.drop(1).toByteArray()
                                     onDataReceived(processedPacket)
                                 }
+                                cancel()
+                                stopWorker = true
                             }
 
                             // Write new data if packetToSend is not null
                             if (packetToSend != null) {
-                                writeData(packetBytes = packetToSend, writeDelay = writeDelay)
-                            }
+                                val currentPacket = packetBytes.drop(1).toByteArray()
+                                val currentModelType = getUnsignedByte (1, currentPacket)
+                                val writeModelType = getUnsignedByte (1, packetToSend)
+                                val currentModelId = getUnsignedByte (2, currentPacket)
+                                val writeModelId = getUnsignedByte (2, packetToSend)
+                                val currentModelSet = getUnsignedByte (3, currentPacket)
+                                val writeModelSet = getUnsignedByte (3, packetToSend)
 
-                            cancel()
-                            stopWorker = true
+                                if (currentModelId == writeModelId  && currentModelType == writeModelType && currentModelSet == writeModelSet) {
+                                    Log.i(
+                                        TAG,
+                                        "All ok: Model type $writeModelType and model ID $writeModelId and model set $writeModelSet"
+                                    )
+                                    writeData(packetBytes = packetToSend, writeDelay = writeDelay)
+                                    cancel()
+                                    stopWorker = true
+                                } else {
+                                    val warningMessage = "Warning: Model doesn't match: \n" +
+                                            "type: $currentModelType <> $writeModelType\n" +
+                                            "id: $currentModelId <> $writeModelId\n" +
+                                            "set: $currentModelSet <> $writeModelSet"
+                                    Log.w(TAG, warningMessage)
+                                    Handler(Looper.getMainLooper()).post {
+                                        onConfirmationRequired?.invoke(
+                                            warningMessage,
+                                            {
+                                                scope.launch {
+                                                    writeData(packetBytes = packetToSend, writeDelay = writeDelay)
+                                                    cancel()
+                                                }
+                                            },
+                                            {
+                                                cancel()
+                                            }
+                                        )
+                                    }
+                                    // Crucially, we return here to stop the function from proceeding
+                                    // to the cancel() call below, keeping the connection open.
+                                    return@Thread
+                                }
+                            }
                         }
-                        
                         else -> {
                             Log.i(TAG, "Bytes available: $bytesAvailable")
                         }
@@ -264,7 +299,7 @@ class BtCommunication(private val context: Context) {
                 writeDataString = writeDataString + dataAfterWrite[i].toInt().toString() + ","
             }
             Handler(Looper.getMainLooper()).post {
-                toastAndLog("Write successful! Data: $writeDataString")
+                toastAndLog("Write successful!")
             }
         } else {
             writeDataString = ""
