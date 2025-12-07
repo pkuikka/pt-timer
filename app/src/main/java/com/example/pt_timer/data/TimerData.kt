@@ -294,7 +294,7 @@ data class TimerData(
         }
 
         // String properties
-        setString(202..220, modelName)
+        setString(firstIndexForDataSetName..220, modelName)
         setString(221..222, servo1Label)
         setString(223..224, servo2Label)
         setString(225..226, servo3Label)

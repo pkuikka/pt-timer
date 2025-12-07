@@ -216,6 +216,8 @@ class BtCommunication(private val context: Context) {
     fun writeData(packetBytes: ByteArray, writeDelay: Long = 100): String {
         var writeDataString = ""
         val buffer = String(packetBytes, charset("utf-8"))
+        val moduloForWriteMessages = if (writeDelay > 200L) 20 else 50
+
         Log.i(TAG, "Writing data bytes: ${packetBytes.size}, buffer $buffer")
 
         // Start data dump with "D"
@@ -227,12 +229,12 @@ class BtCommunication(private val context: Context) {
         // Note thet we are skipping the 0 position in the array.
         for (i in 1..252) {  //if this is 251 it doesn't complete and crashes?
             val value: Int = packetBytes[i].toInt()
-            if (i < 4) {
+            /*if (i < 4) {
                 Handler(Looper.getMainLooper()).post {
                     toastAndLog("Writing $i...$value")
                 }
-            }
-            if (i.mod(50) == 0) {
+            }*/
+            if (i.mod(moduloForWriteMessages) == 0) {
                 Handler(Looper.getMainLooper()).post {
                     toastAndLog("Writing $i")
                 }
