@@ -51,7 +51,7 @@ fun TimerDataGridLayout(
             uiState.timerData.row2Label,
             uiState.timerData.row3Label,
             uiState.timerData.row4Label,
-            "", "", "", "-->", "", "", "", "", "", "14", "15", "16"
+            "", "", "", "", "", "", "", "", "", "", "", ""
         )
 
         // The actual numerical data from the device
@@ -75,7 +75,10 @@ fun TimerDataGridLayout(
         for (i in 0 until (uiState.timerData.numberOfDataRows)) {
             // Add the row header for this row
             if (i < rowHeaders.size) {
-                combinedList.add(rowHeaders[i])
+                if (i+1 == uiState.timerData.skipBuntGoToRow) // header row is the +1
+                    combinedList.add("-->")
+                else
+                    combinedList.add(rowHeaders[i])
             } else {
                 combinedList.add("") // Fallback if not enough headers
             }

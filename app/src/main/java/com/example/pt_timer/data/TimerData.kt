@@ -26,7 +26,7 @@ data class TimerData(
     // value + 64 = Extended Power Enable (1 = enabled, 0 = disabled)
     // value + 128 = Re-latch hook (1 = re-latch, 0 = conventional hook)
     val batteryWarningVoltage: Double = 7.2,  // 5 = Battery voltage warning
-    val numberOfDataRows: Int = MAX_TIMER_DATA_ROWS, // 6 = Number of data rows
+    val numberOfDataRows: Int = 7, // 6 = Number of data rows
     val servoSettingsByte: Byte = 1, // 7 = Servo 1 - 4 directions:
     // value + 1 = Servo 1 reversed
     // value + 2 = Servo 2 reversed
@@ -53,11 +53,11 @@ data class TimerData(
     val timerCalibrationInMilliseconds: Int = 15, // 31 =  Timer calibration in milliseconds
     val timerCalibrationInMicroseconds1: Int = 1, // 32 - 33 = Timer calibration in microseconds
     val timerCalibrationInMicroseconds2: Int = 150, // 32 - 33 = Timer calibration in microseconds
-    val maxDataRows: Int = 15, // 34 = Maximum amount of data rows
+    val maxDataRows: Int = MAX_TIMER_DATA_ROWS, // 34 = Maximum amount of data rows
     val firstIndexForDataSetName: Int = 202, // 35 = First index for data set name
     val maxTimeForSkippingBunt: Int = 0, // 36 =  F1A: max time for skipping bunt
     val minTimeForSkippingBunt: Int = 0, // 37 =  F1A: min time for skipping bunt (if 0, never skip)
-    val skipBuntGoToRow: Int = 0, // 38 =  F1A: go to this line when skipping bunt
+    val skipBuntGoToRow: Int = 6, // 38 =  F1A: go to this line when skipping bunt
     val dtPowerDownDelay: Int = 0, // 39 = DT power down delay (to keep logger on) from versions 1.55 onwards.
     val empty40: Int = 0,  // 40 = empty / reserve
 
