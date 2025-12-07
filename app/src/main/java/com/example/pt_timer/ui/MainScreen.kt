@@ -88,6 +88,15 @@ fun MainScreen(
         }
     )
 
+    val fileDeleterLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                mainScreenViewModel.deleteFile(it)
+            }
+        }
+    )
+
     MainScreenContent(
         uiState = mainScreenUiState,
         onReadClick = { mainScreenViewModel.read() },
@@ -98,7 +107,9 @@ fun MainScreen(
         onSaveClick = { suggestedFileName ->
             fileSaverLauncher.launch(suggestedFileName)
         },
-        //onDeleteClick = { /* TODO: Call mainScreenViewModel.saveFile() */ },
+        onDeleteClick = {
+            fileDeleterLauncher.launch(arrayOf("application/json"))
+        },
         onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
         onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
         onSettingsClick = onSettingsClick,
@@ -122,6 +133,7 @@ fun MainScreenContent(
     onWriteClick: () -> Unit,
     onOpenClick: () -> Unit,
     onSaveClick: (String) -> Unit,
+    onDeleteClick: () -> Unit,
     onDeviceSelected: (String) -> Unit,
     onRefreshDevices: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -170,7 +182,7 @@ fun MainScreenContent(
                 onWriteClick = onWriteClick,
                 onOpenClick = onOpenClick,
                 onSaveClick = onSaveClick,
-                onDeleteClick = {},
+                onDeleteClick = onDeleteClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     // TO FIX Samsung navigation overlap.
@@ -409,7 +421,11 @@ fun BottomButtonsPanel(
             {
                 Text(text = stringResource(R.string.button_save), fontSize = 14.sp)
             }
-            OutlinedButton(onClick = onDeleteClick) {
+            OutlinedButton(
+                onClick = {
+                    onDeleteClick()
+                }
+            ) {
                 Text(text = stringResource(R.string.button_delete), fontSize = 14.sp)
             }
         }
@@ -432,6 +448,7 @@ fun MainScreenPreview() {
         onWriteClick = {},
         onOpenClick = {},
         onSaveClick = {},
+        onDeleteClick = {},
         onDeviceSelected = {},
         onRefreshDevices = {},
         onSettingsClick = {},

@@ -25,8 +25,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import android.provider.DocumentsContract
 
-// Main screen UI state
 class UiViewModel(
     application: Application,
     private val userPreferencesRepository: UserPreferencesRepository,
@@ -258,6 +258,25 @@ class UiViewModel(
             Log.e("UiViewModel", "Failed to save file", e)
             android.os.Handler(Looper.getMainLooper()).post {
                 Toast.makeText(application.applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    fun deleteFile(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                // This line shows a system confirmation dialog before deleting.
+                val deleted = DocumentsContract.deleteDocument(applicationContext.contentResolver, uri)
+
+                // Add a Toast to give the user feedback.
+                if (deleted) {
+                    android.os.Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(application.applicationContext, "File deleted.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                // This catch block will be entered if the user cancels the confirmation dialog.
+                Log.e("UiViewModel", "File deletion cancelled or failed.", e)
             }
         }
     }

@@ -137,7 +137,7 @@ data class TimerData(
             val servo4Values = indices.map { i -> getUnsignedByte(46 + (i * 7)) }
             // val stepValues = indices.map { i -> getUnsignedByte(47 + (i * 7)) }  // skip step values totally
 
-            val newfirstIndexForDataSetName = getUnsignedByte(35)
+            val newFirstIndexForDataSetName = getUnsignedByte(35)
 
             // --- Map each byte to its corresponding property ---
             return TimerData(
@@ -185,7 +185,7 @@ data class TimerData(
                 servo4Values = servo4Values,
 
                 // String values read from specific ranges
-                modelName = readString(newfirstIndexForDataSetName..220).trimEnd(),
+                modelName = readString(newFirstIndexForDataSetName..220).trimEnd(),
                 servo1Label = readString(221..222),
                 servo2Label = readString(223..224),
                 servo3Label = readString(225..226),
