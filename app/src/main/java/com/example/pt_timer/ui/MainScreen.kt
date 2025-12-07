@@ -66,6 +66,7 @@ fun MainScreenContent(
     uiState: UiState,
     onReadClick: () -> Unit,
     onWriteClick: () -> Unit,
+    onOpenClick: () -> Unit,
     onSaveClick: (String) -> Unit,
     onDeviceSelected: (String) -> Unit,
     onRefreshDevices: () -> Unit,
@@ -113,7 +114,7 @@ fun MainScreenContent(
                 onDeviceSelected = onDeviceSelected,
                 onReadClick = onReadClick,
                 onWriteClick = onWriteClick,
-                onOpenClick = {},
+                onOpenClick = onOpenClick,
                 onSaveClick = onSaveClick,
                 onDeleteClick = {},
                 modifier = Modifier
@@ -152,6 +153,16 @@ fun MainScreen(
 ) {
     val mainScreenUiState by mainScreenViewModel.uiState.collectAsState()
 
+    val fileOpenerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(), // Use OpenDocument
+        onResult = { uri: Uri? ->
+            // The user has selected a file; the result is handled here.
+            uri?.let {
+                mainScreenViewModel.loadJsonFromFile(it)
+            }
+        }
+    )
+
     val fileSaverLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json"),
         onResult = { uri: Uri? ->
@@ -165,7 +176,9 @@ fun MainScreen(
         uiState = mainScreenUiState,
         onReadClick = { mainScreenViewModel.read() },
         onWriteClick = { mainScreenViewModel.write() },
-        //onOpenClick = { /* TODO: Call mainScreenViewModel.openFile() */ },
+        onOpenClick = {
+            fileOpenerLauncher.launch(arrayOf("application/json"))
+        },
         onSaveClick = { suggestedFileName ->
             fileSaverLauncher.launch(suggestedFileName)
         },
@@ -379,7 +392,11 @@ fun BottomButtonsPanel(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            OutlinedButton(onClick = onOpenClick) {
+            OutlinedButton(
+                onClick = {
+                    onOpenClick()
+                }
+            ) {
                 Text(text = stringResource(R.string.button_open), fontSize = 14.sp)
             }
             // Save Button
@@ -414,6 +431,7 @@ fun MainScreenPreview() {
         uiState = fakeUiState,
         onReadClick = {},
         onWriteClick = {},
+        onOpenClick = {},
         onSaveClick = {},
         onDeviceSelected = {},
         onRefreshDevices = {},

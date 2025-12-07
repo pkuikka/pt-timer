@@ -2,6 +2,7 @@ package com.example.pt_timer.ui
 
 import android.Manifest
 import android.app.Application
+import android.content.Context
 import android.net.Uri
 import android.os.Looper
 import android.util.Log
@@ -28,7 +29,8 @@ import kotlinx.serialization.json.Json
 // Main screen UI state
 class UiViewModel(
     application: Application,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val applicationContext: Context
 ) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -214,6 +216,27 @@ class UiViewModel(
         }
     }
 
+    fun loadJsonFromFile(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                // Use the applicationContext to get a ContentResolver and open the input stream
+                val contentResolver = applicationContext.contentResolver
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val jsonString = inputStream.bufferedReader().use { it.readText() }
+                    val loadedTimerData = Json.decodeFromString<TimerData>(jsonString)
+
+                    _uiState.update { currentState ->
+                        currentState.copy(timerData = loadedTimerData)
+                    }
+                }
+            } catch (e: Exception) {
+                // Handle potential errors, e.g., file not found, invalid JSON
+                // You could expose an error state to the UI here if needed
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun saveJsonToFile(uri: Uri) {
         try {
             val currentTimerData = _uiState.value.timerData
@@ -245,7 +268,8 @@ class UiViewModel(
                 val application = (this[APPLICATION_KEY] as PtTimerApplication)
                 UiViewModel(
                     application = application,
-                    userPreferencesRepository = application.userPreferencesRepository
+                    userPreferencesRepository = application.userPreferencesRepository,
+                    applicationContext = application.applicationContext
                 )
             }
         }
