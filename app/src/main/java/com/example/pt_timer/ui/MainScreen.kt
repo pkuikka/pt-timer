@@ -4,7 +4,10 @@ package com.example.pt_timer.ui
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,35 +30,34 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Tab
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.ui.graphics.Color
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.text.style.TextOverflow
 import com.example.pt_timer.R
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +66,7 @@ fun MainScreenContent(
     uiState: UiState,
     onReadClick: () -> Unit,
     onWriteClick: () -> Unit,
+    onSaveClick: (String) -> Unit,
     onDeviceSelected: (String) -> Unit,
     onRefreshDevices: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -82,12 +85,12 @@ fun MainScreenContent(
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             onRefreshDevices()
-        }
-        else{
+        } else {
             onRefreshDevices()
             Toast.makeText(context, "Bluetooth permissions are required", Toast.LENGTH_SHORT).show()
         }
     }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,11 +109,12 @@ fun MainScreenContent(
             BottomButtonsPanel(
                 btDeviceList = uiState.btDevices,
                 selectedDevice = uiState.selectedBtDevice,
+                modelName = uiState.timerData.modelName,
                 onDeviceSelected = onDeviceSelected,
                 onReadClick = onReadClick,
                 onWriteClick = onWriteClick,
                 onOpenClick = {},
-                onSaveClick = {},
+                onSaveClick = onSaveClick,
                 onDeleteClick = {},
                 modifier = Modifier
                     .fillMaxWidth()
@@ -125,14 +129,19 @@ fun MainScreenContent(
             modifier = modifier
                 .padding(innerPadding) // Apply the inner padding to account for scaffold's insets
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()), // Make the column scrollable
-            //verticalArrangement = Arrangement.Center,
-            //horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState()),
         ) {
-            TabLayout(uiState,onModelNameChanged, onModelIdChanged, onModelSetChanged, onGridItemChanged)
+            TabLayout(
+                uiState,
+                onModelNameChanged,
+                onModelIdChanged,
+                onModelSetChanged,
+                onGridItemChanged
+            )
         }
     }
 }
+
 @SuppressLint("MissingPermission")
 @Composable
 fun MainScreen(
@@ -143,22 +152,39 @@ fun MainScreen(
 ) {
     val mainScreenUiState by mainScreenViewModel.uiState.collectAsState()
 
+    val fileSaverLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                mainScreenViewModel.saveJsonToFile(it)
+            }
+        }
+    )
+
     MainScreenContent(
         uiState = mainScreenUiState,
         onReadClick = { mainScreenViewModel.read() },
         onWriteClick = { mainScreenViewModel.write() },
+        //onOpenClick = { /* TODO: Call mainScreenViewModel.openFile() */ },
+        onSaveClick = { suggestedFileName ->
+            fileSaverLauncher.launch(suggestedFileName)
+        },
+        //onDeleteClick = { /* TODO: Call mainScreenViewModel.saveFile() */ },
         onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
         onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
         onSettingsClick = onSettingsClick,
-        //onOpenClick = { /* TODO: Call mainScreenViewModel.openFile() */ },
-        //onSaveClick = { /* TODO: Call mainScreenViewModel.saveFile() */ },
-        //onDeleteClick = { /* TODO: Call mainScreenViewModel.saveFile() */ },
         onModelNameChanged = { newName -> mainScreenViewModel.onModelNameChanged(newName) },
         onModelIdChanged = { newIdString -> mainScreenViewModel.onModelIdChanged(newIdString) },
         onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
-        onGridItemChanged = { index, newValue -> mainScreenViewModel.onGridItemChanged(index, newValue) },
+        onGridItemChanged = { index, newValue ->
+            mainScreenViewModel.onGridItemChanged(
+                index,
+                newValue
+            )
+        },
     )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabLayout(
@@ -205,19 +231,32 @@ fun TabLayout(
         // Tab content based on the selected index
         when (state) {
             //0 -> StartTabContent(uiState)
-            0 -> TimerSetupTabContent(uiState,onModelNameChanged, onModelIdChanged, onModelSetChanged, onGridItemChanged)
-            1  -> ServoSetupTabContent(uiState, onModelNameChanged, onModelIdChanged, onModelSetChanged)
-        // Add other tabs as necessary
+            0 -> TimerSetupTabContent(
+                uiState,
+                onModelNameChanged,
+                onModelIdChanged,
+                onModelSetChanged,
+                onGridItemChanged
+            )
+
+            1 -> ServoSetupTabContent(
+                uiState,
+                onModelNameChanged,
+                onModelIdChanged,
+                onModelSetChanged
+            )
+            // Add other tabs as necessary
         }
     }
 }
 
 // Tab 0: Start Tab content
+/*
 @Composable
 fun StartTabContent(uiState: UiState) {
     val timerData = uiState.timerData
     Text(timerData.modelName) // Display the model name from the timer data
-}
+}*/
 
 // Tab 1: Timer Setup content
 @Composable
@@ -228,9 +267,15 @@ fun TimerSetupTabContent(
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
 ) {
-    TimerLayoutRefresh(uiState,onModelNameChanged, onModelIdChanged, onModelSetChanged) // Possibly refresh the timer setup
+    TimerLayoutRefresh(
+        uiState,
+        onModelNameChanged,
+        onModelIdChanged,
+        onModelSetChanged
+    ) // Possibly refresh the timer setup
     TimerDataGridLayout(uiState, onGridItemChanged)
 }
+
 @Composable
 fun ServoSetupTabContent(
     uiState: UiState,
@@ -238,7 +283,12 @@ fun ServoSetupTabContent(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
 ) {
-    TimerLayoutRefresh(uiState,onModelNameChanged, onModelIdChanged, onModelSetChanged) // Possibly refresh the timer setup
+    TimerLayoutRefresh(
+        uiState,
+        onModelNameChanged,
+        onModelIdChanged,
+        onModelSetChanged
+    ) // Possibly refresh the timer setup
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -246,12 +296,13 @@ fun ServoSetupTabContent(
 fun BottomButtonsPanel(
     btDeviceList: List<String>,
     selectedDevice: String,
+    modelName: String,
     onDeviceSelected: (String) -> Unit,
     onReadClick: () -> Unit,
     onWriteClick: () -> Unit,
-    onOpenClick: () -> Unit,  // 1. Add this for the "Open" button
-    onSaveClick: () -> Unit,  // 2. Add this for the "Save" butto
-    onDeleteClick: () -> Unit,  // 2. Add this for the "Save" butto
+    onOpenClick: () -> Unit,
+    onSaveClick: (String) -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
@@ -278,7 +329,7 @@ fun BottomButtonsPanel(
                     modifier = Modifier
                         .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                         .fillMaxWidth(),
-                    value =   if (btDeviceList.isNotEmpty()) selectedDevice else "Select BT Device",
+                    value = if (btDeviceList.isNotEmpty()) selectedDevice else "Select BT Device",
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Select BT Device") },
@@ -331,7 +382,15 @@ fun BottomButtonsPanel(
             OutlinedButton(onClick = onOpenClick) {
                 Text(text = stringResource(R.string.button_open), fontSize = 14.sp)
             }
-            OutlinedButton(onClick = onSaveClick) {
+            // Save Button
+            OutlinedButton(
+                onClick = {
+                    // force focus cleaning, so that last edit on grid is noticed
+                    focusManager.clearFocus()
+                    val suggestedFileName = modelName.replace(Regex("[^a-zA-Z0-9.-]"), "_") + ".json"
+                    onSaveClick(suggestedFileName)
+                })
+            {
                 Text(text = stringResource(R.string.button_save), fontSize = 14.sp)
             }
             OutlinedButton(onClick = onDeleteClick) {
@@ -340,8 +399,6 @@ fun BottomButtonsPanel(
         }
     }
 }
-
-
 
 @Preview(showBackground = true)
 @Composable
@@ -357,13 +414,14 @@ fun MainScreenPreview() {
         uiState = fakeUiState,
         onReadClick = {},
         onWriteClick = {},
+        onSaveClick = {},
         onDeviceSelected = {},
         onRefreshDevices = {},
         onSettingsClick = {},
         onModelNameChanged = {},
         onModelIdChanged = {},
         onModelSetChanged = {},
-        onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value")}
+        onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
 }
 

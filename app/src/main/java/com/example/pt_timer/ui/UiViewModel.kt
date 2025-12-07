@@ -2,11 +2,15 @@ package com.example.pt_timer.ui
 
 import android.Manifest
 import android.app.Application
+import android.net.Uri
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -19,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 // Main screen UI state
 class UiViewModel(
@@ -206,6 +211,31 @@ class UiViewModel(
         } catch (e: Exception) {
             // Handle any other potential parsing errors
             Log.e("DataParsing", "Failed to parse timer data packet.", e)
+        }
+    }
+
+    fun saveJsonToFile(uri: Uri) {
+        try {
+            val currentTimerData = _uiState.value.timerData
+            val json = Json {
+                prettyPrint = true
+                encodeDefaults = true // Force encoding of properties that have default values.
+            }
+            val jsonString = json.encodeToString(currentTimerData)
+            Log.i("UiViewModel", "File content to be saved $jsonString")
+
+            application.applicationContext.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.write(jsonString.toByteArray())
+            }
+            Log.i("UiViewModel", "Successfully saved file to $uri")
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(application.applicationContext, "File saved successfully!", Toast.LENGTH_LONG).show()
+            }
+        } catch (e: Exception) {
+            Log.e("UiViewModel", "Failed to save file", e)
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(application.applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
