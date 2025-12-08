@@ -16,16 +16,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -146,6 +146,8 @@ fun MainScreen(
         onModelNameChanged = { newName -> mainScreenViewModel.onModelNameChanged(newName) },
         onModelIdChanged = { newIdString -> mainScreenViewModel.onModelIdChanged(newIdString) },
         onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
+        onAddRowClick = { mainScreenViewModel.addRow() },
+        onDeleteRowClick = { mainScreenViewModel.deleteRow() },
         onGridItemChanged = { index, newValue ->
             mainScreenViewModel.onGridItemChanged(
                 index,
@@ -171,9 +173,12 @@ fun MainScreenContent(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
+    onAddRowClick: () -> Unit,
+    onDeleteRowClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     LaunchedEffect(key1 = true) {
         if (ContextCompat.checkSelfPermission(
@@ -193,10 +198,46 @@ fun MainScreenContent(
             TopAppBar(
                 title = { Text("PT-Timer Control") },
                 actions = {
-                    IconButton(onClick = onSettingsClick) {
+                    var showMenu by remember { mutableStateOf(false) }
+                    val onCloseMenu = remember { { showMenu = false } }
+
+                    // Icon button to open the menu
+                    IconButton(onClick = { showMenu = true }) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "User Settings"
+                            imageVector = Icons.Default.MoreVert, // Use the standard "more options" icon
+                            contentDescription = "More options"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { onCloseMenu() }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Settings") },
+                            onClick = {
+                                onCloseMenu()
+                                onSettingsClick()
+                            }
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Add row below") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onAddRowClick()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete row") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onDeleteRowClick()
+                            }
                         )
                     }
                 }
@@ -224,8 +265,7 @@ fun MainScreenContent(
         Column(
             modifier = modifier
                 .padding(innerPadding) // Apply the inner padding to account for scaffold's insets
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
+                .fillMaxSize()
         ) {
             TabLayout(
                 uiState,
@@ -531,6 +571,8 @@ fun MainScreenPreview() {
         onModelNameChanged = {},
         onModelIdChanged = {},
         onModelSetChanged = {},
+        onAddRowClick = {},
+        onDeleteRowClick = {},
         onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
 }

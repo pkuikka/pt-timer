@@ -13,4 +13,7 @@ data class UiState(
 
     // File handling
     val savedFiles: List<String> = emptyList(), // List of saved files
+
+    // UI helpers
+    val selectedRow: Int = -1 // Add this line. -1 indicates no row is selected.
 )
