@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.pt_timer.BtCommunication
 import com.example.pt_timer.PtTimerApplication
+import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
 import com.example.pt_timer.data.TimerData
 import com.example.pt_timer.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -316,6 +317,87 @@ class UiViewModel(
         }
     }
 
+    fun addRow() {
+        val rowToAdd = _uiState.value.selectedRow
+
+        // make sure multiple adds don't happen with single row select
+        _uiState.update { it.copy(selectedRow = -1) }
+
+        if (rowToAdd == -1) {
+            // No row is selected, do nothing or show a Toast
+            Log.w("UiViewModel", "Add row action called but no row is selected.")
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(applicationContext, "Please select a row to add from column 1.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            return
+        }
+
+        // Check that 'static' rows are not broken
+        if ((rowToAdd <= 3 && _uiState.value.timerData.modelType == 2) ||
+            (rowToAdd <= 2 && _uiState.value.timerData.modelType == 1)) {
+            Log.i("UiViewModel", "Cannot add row here. Row=$rowToAdd")
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(applicationContext, "Cannot add row here.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            return
+        }
+
+        // Check that MAX_TIMER_DATA_ROWS is not broken
+        if (uiState.value.timerData.numberOfDataRows + 1 > MAX_TIMER_DATA_ROWS) {
+            Log.i("UiViewModel", "Cannot add more that $MAX_TIMER_DATA_ROWS rows.")
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(applicationContext, "Cannot add more that $MAX_TIMER_DATA_ROWS rows.", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            return
+        }
+
+        Log.i("UiViewModel", "Adding row $rowToAdd...")
+        _uiState.update { currentState ->
+            val currentTimerData = currentState.timerData
+            var newNumberOfRows = currentTimerData.numberOfDataRows + 1
+            if (newNumberOfRows < 0) newNumberOfRows = 0
+
+            // Create mutable copies of the lists to modify them
+            val newTimeValues = currentTimerData.timeValues.toMutableList()
+            val newServo1Values = currentTimerData.servo1Values.toMutableList()
+            val newServo2Values = currentTimerData.servo2Values.toMutableList()
+            val newServo3Values = currentTimerData.servo3Values.toMutableList()
+            val newServo4Values = currentTimerData.servo4Values.toMutableList()
+
+            // Shift all data rows down starting from the biggest row number
+            for (i in (newNumberOfRows - 2) downTo (rowToAdd - 1)) {
+                newTimeValues[i+1] = newTimeValues[i]
+                newServo1Values[i+1] = newServo1Values[i]
+                newServo2Values[i+1] = newServo2Values[i]
+                newServo3Values[i+1] = newServo3Values[i]
+                newServo4Values[i+1] = newServo4Values[i]
+            }
+
+            // Remember to move the bunt safety line if it's affected
+            var newSkipBuntGoToRow = currentTimerData.skipBuntGoToRow
+            if (rowToAdd < newSkipBuntGoToRow) {
+                newSkipBuntGoToRow += 1
+            }
+
+            // Create a new TimerData object with all the updated values
+            val updatedTimerData = currentTimerData.copy(
+                numberOfDataRows = newNumberOfRows,
+                timeValues = newTimeValues,
+                servo1Values = newServo1Values,
+                servo2Values = newServo2Values,
+                servo3Values = newServo3Values,
+                servo4Values = newServo4Values,
+                skipBuntGoToRow = newSkipBuntGoToRow
+            )
+
+            // Update the state with the new TimerData object
+            currentState.copy(timerData = updatedTimerData)
+        }
+    }
+
     fun deleteRow() {
         val rowToDelete = _uiState.value.selectedRow
 
@@ -324,7 +406,7 @@ class UiViewModel(
 
         if (rowToDelete == -1) {
             // No row is selected, do nothing or show a Toast
-            Log.w("UiViewModel", "Delete action called but no row is selected.")
+            Log.w("UiViewModel", "Delete row action called but no row is selected.")
             android.os.Handler(Looper.getMainLooper()).post {
                 Toast.makeText(applicationContext, "Please select a row to delete from column 1.", Toast.LENGTH_SHORT)
                     .show()

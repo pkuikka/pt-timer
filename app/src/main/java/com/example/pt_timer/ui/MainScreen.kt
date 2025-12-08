@@ -25,6 +25,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -145,6 +146,7 @@ fun MainScreen(
         onModelNameChanged = { newName -> mainScreenViewModel.onModelNameChanged(newName) },
         onModelIdChanged = { newIdString -> mainScreenViewModel.onModelIdChanged(newIdString) },
         onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
+        onAddRowClick = { mainScreenViewModel.addRow() },
         onDeleteRowClick = { mainScreenViewModel.deleteRow() },
         onGridItemChanged = { index, newValue ->
             mainScreenViewModel.onGridItemChanged(
@@ -171,6 +173,7 @@ fun MainScreenContent(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
+    onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -215,6 +218,17 @@ fun MainScreenContent(
                             onClick = {
                                 onCloseMenu()
                                 onSettingsClick()
+                            }
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Add row below") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onAddRowClick()
                             }
                         )
                         DropdownMenuItem(
@@ -557,6 +571,7 @@ fun MainScreenPreview() {
         onModelNameChanged = {},
         onModelIdChanged = {},
         onModelSetChanged = {},
+        onAddRowClick = {},
         onDeleteRowClick = {},
         onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
