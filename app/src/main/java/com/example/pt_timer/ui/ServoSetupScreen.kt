@@ -31,9 +31,8 @@ import com.example.pt_timer.data.TimerData
 @Composable
 fun ServoSetupScreen(
     uiState: UiState,
+    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onModelNameChanged: (String) -> Unit,
-    onModelIdChanged: (String) -> Unit,
-    onModelSetChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
@@ -88,7 +87,7 @@ fun ServoSetupScreen(
                 OutlinedTextField(
                         modifier = Modifier.width(80.dp),
                         value = servoData1.midPos.toString(),//midPos.toString(),
-                        onValueChange = onModelIdChanged,
+                        onValueChange = onModelNameChanged,
                         //label = { Text("Mid pos.") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -96,23 +95,28 @@ fun ServoSetupScreen(
                 OutlinedTextField(
                     modifier = Modifier.width(80.dp),
                     value = servoData1.range.toString(),
-                    onValueChange = onModelSetChanged,
+                    onValueChange = onModelNameChanged,
                     //label = { Text("Range") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
                 )
             // Correct: state inside a Composable
             val servo1InUseCheckedState = remember { mutableStateOf(servoData1.inUse) }
-
             Checkbox(
                 checked = servo1InUseCheckedState.value,
-                onCheckedChange = { servo1InUseCheckedState.value = it }
+                    onCheckedChange = {
+                    onUpdateServoSettingsByte(!it, 4)
+                    servo1InUseCheckedState.value = it
+                    }
             )
 
             val servo1ReversedCheckedState = remember { mutableStateOf(servoData1.reverse) }
             Checkbox(
                 checked = servo1ReversedCheckedState.value,
-                onCheckedChange = { servo1ReversedCheckedState.value = it }
+                onCheckedChange = {
+                    onUpdateServoSettingsByte(it, 0)
+                    servo1ReversedCheckedState.value = it
+                }
             )
         }
 
@@ -132,7 +136,7 @@ fun ServoSetupScreen(
             OutlinedTextField(
                 modifier = Modifier.width(80.dp),
                 value = servoData2.midPos.toString(),//midPos.toString(),
-                onValueChange = onModelIdChanged,
+                onValueChange = onModelNameChanged,
                 //label = { Text("Mid pos.") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -140,23 +144,29 @@ fun ServoSetupScreen(
             OutlinedTextField(
                 modifier = Modifier.width(80.dp),
                 value = servoData2.range.toString(),
-                onValueChange = onModelSetChanged,
+                onValueChange = onModelNameChanged,
                 //label = { Text("Range") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
             // Correct: state inside a Composable
-            val servo2InUseCheckedState = remember { mutableStateOf(servoData2.inUse) }
 
+            val servo2InUseCheckedState = remember { mutableStateOf(servoData2.inUse) }
             Checkbox(
                 checked = servo2InUseCheckedState.value,
-                onCheckedChange = { servo2InUseCheckedState.value = it }
+                onCheckedChange = {
+                    onUpdateServoSettingsByte(!it, 5)
+                    servo2InUseCheckedState.value = it
+                }
             )
 
             val servo2ReversedCheckedState = remember { mutableStateOf(servoData2.reverse) }
             Checkbox(
                 checked = servo2ReversedCheckedState.value,
-                onCheckedChange = { servo2ReversedCheckedState.value = it }
+                onCheckedChange = {
+                    onUpdateServoSettingsByte(it, 1)
+                    servo2ReversedCheckedState.value = it
+                }
             )
         }
 
@@ -176,7 +186,7 @@ fun ServoSetupScreen(
             OutlinedTextField(
                 modifier = Modifier.width(80.dp),
                 value = servoData3.midPos.toString(),//midPos.toString(),
-                onValueChange = onModelIdChanged,
+                onValueChange = onModelNameChanged,
                 //label = { Text("Mid pos.") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -184,23 +194,28 @@ fun ServoSetupScreen(
             OutlinedTextField(
                 modifier = Modifier.width(80.dp),
                 value = servoData3.range.toString(),
-                onValueChange = onModelSetChanged,
+                onValueChange = onModelNameChanged,
                 //label = { Text("Range") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
             // Correct: state inside a Composable
             val servo3InUseCheckedState = remember { mutableStateOf(servoData3.inUse) }
-
             Checkbox(
                 checked = servo3InUseCheckedState.value,
-                onCheckedChange = { servo3InUseCheckedState.value = it }
+                onCheckedChange = {
+                    onUpdateServoSettingsByte(!it, 6)
+                    servo3InUseCheckedState.value = it
+                }
             )
 
             val servo3ReversedCheckedState = remember { mutableStateOf(servoData3.reverse) }
             Checkbox(
                 checked = servo3ReversedCheckedState.value,
-                onCheckedChange = { servo3ReversedCheckedState.value = it }
+                onCheckedChange = {
+                    onUpdateServoSettingsByte(it, 2)
+                    servo3ReversedCheckedState.value = it
+                }
             )
         }
 
@@ -220,7 +235,7 @@ fun ServoSetupScreen(
             OutlinedTextField(
                 modifier = Modifier.width(80.dp),
                 value = servoData4.midPos.toString(),//midPos.toString(),
-                onValueChange = onModelIdChanged,
+                onValueChange = onModelNameChanged,
                 //label = { Text("Mid pos.") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -228,28 +243,41 @@ fun ServoSetupScreen(
             OutlinedTextField(
                 modifier = Modifier.width(80.dp),
                 value = servoData4.range.toString(),
-                onValueChange = onModelSetChanged,
+                onValueChange = onModelNameChanged,
                 //label = { Text("Range") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
             // Correct: state inside a Composable
             val servo4InUseCheckedState = remember { mutableStateOf(servoData4.inUse) }
-
             Checkbox(
                 checked = servo4InUseCheckedState.value,
-                onCheckedChange = { servo4InUseCheckedState.value = it }
+                onCheckedChange = {
+                    onUpdateServoSettingsByte(!it, 7)
+                    servo4InUseCheckedState.value = it
+                }
             )
 
             val servo4ReversedCheckedState = remember { mutableStateOf(servoData4.reverse) }
             Checkbox(
                 checked = servo4ReversedCheckedState.value,
-                onCheckedChange = { servo4ReversedCheckedState.value = it }
+                onCheckedChange = {
+                    onUpdateServoSettingsByte(it, 3)
+                    servo4ReversedCheckedState.value = it
+                }
             )
         }
     }
 }
-
+fun ServoSetupScreenRefresh(
+    uiState: UiState,
+    modifier: Modifier = Modifier
+){
+    ServoData1().updateServoData(uiState)
+    ServoData2().updateServoData(uiState)
+    ServoData3().updateServoData(uiState)
+    ServoData4().updateServoData(uiState)
+}
 @Preview(showBackground = true)
 @Composable
 fun ServoSetupScreenPreview() {
@@ -269,10 +297,11 @@ fun ServoSetupScreenPreview() {
     )
     ServoSetupScreen(
         uiState = uiState,
-        onModelNameChanged = {},
-        onModelIdChanged = {},
-        onModelSetChanged = {}
-
+        onUpdateServoSettingsByte = { newSettings, position ->
+            // Example logic for updating the servo settings byte
+            println("Servo settings byte updated: $newSettings at position $position")
+        },
+        onModelNameChanged = {}
     )
 }
 

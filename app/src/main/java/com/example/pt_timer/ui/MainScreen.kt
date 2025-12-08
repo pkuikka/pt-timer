@@ -154,6 +154,11 @@ fun MainScreen(
                 newValue
             )
         },
+        onUpdateServoSettingsByte = { newServoSettings, position ->
+            mainScreenViewModel.onUpdateServoSettingsByte(newServoSettings, position
+
+            )
+        }
     )
 }
 
@@ -175,6 +180,7 @@ fun MainScreenContent(
     onGridItemChanged: (Int, String) -> Unit,
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
+    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -272,7 +278,8 @@ fun MainScreenContent(
                 onModelNameChanged,
                 onModelIdChanged,
                 onModelSetChanged,
-                onGridItemChanged
+                onGridItemChanged,
+                onUpdateServoSettingsByte
             )
         }
     }
@@ -286,6 +293,7 @@ fun TabLayout(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
+    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Persisting the selected tab index
@@ -334,9 +342,8 @@ fun TabLayout(
 
             1 -> ServoSetupTabContent(
                 uiState,
-                onModelNameChanged,
-                onModelIdChanged,
-                onModelSetChanged
+                onUpdateServoSettingsByte,
+                onModelNameChanged
             )
             // Add other tabs as necessary
         }
@@ -372,15 +379,13 @@ fun TimerSetupTabContent(
 @Composable
 fun ServoSetupTabContent(
     uiState: UiState,
-    onModelNameChanged: (String) -> Unit,
-    onModelIdChanged: (String) -> Unit,
-    onModelSetChanged: (String) -> Unit,
+    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
+    onModelNameChanged: (String) -> Unit
 ) {
     ServoSetupScreen(
         uiState,
+        onUpdateServoSettingsByte,
         onModelNameChanged,
-        onModelIdChanged,
-        onModelSetChanged
     ) // Possibly refresh the timer setup
 }
 
@@ -452,7 +457,6 @@ fun BottomButtonsPanel(
             // Read Button
             Button(onClick = onReadClick) {
                 Text(text = stringResource(R.string.button_read), fontSize = 16.sp)
-
             }
 
             // Write Button
@@ -573,7 +577,11 @@ fun MainScreenPreview() {
         onModelSetChanged = {},
         onAddRowClick = {},
         onDeleteRowClick = {},
-        onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
+        onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
+        onUpdateServoSettingsByte = { newSettings, position ->
+            // Example logic for updating the servo settings byte
+            println("Servo settings byte updated: $newSettings at position $position")
+        }
     )
 }
 

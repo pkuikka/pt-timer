@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.pt_timer.BtCommunication
 import com.example.pt_timer.PtTimerApplication
 import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
+import com.example.pt_timer.data.ServoData1
 import com.example.pt_timer.data.TimerData
 import com.example.pt_timer.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -170,7 +171,7 @@ class UiViewModel(
         }
     }
 
-    fun updateServoSettingsByte(newSettings: Boolean, position: Int) {
+    fun onUpdateServoSettingsByte(newSettings: Boolean, position: Int) {
       _uiState.update { currentState ->
         // Modify the servoSettingsByte at the specified position
         val updatedByte = if (newSettings) {
