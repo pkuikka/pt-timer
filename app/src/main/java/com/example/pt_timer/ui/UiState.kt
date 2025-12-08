@@ -9,11 +9,11 @@ data class UiState(
     // BT communication related properties
     val btDevices: List<String> = emptyList(), // List of BT device names
     val selectedBtDevice: String = "", // The currently selected BT device
-    val writeCommunicationDelay: Float = 300F, // Timer writing communication delay in milliseconds
+    val writeCommunicationDelay: Float = 100F, // Timer writing communication delay in milliseconds
 
     // File handling
     val savedFiles: List<String> = emptyList(), // List of saved files
 
     // UI helpers
-    val selectedRow: Int = -1 // Add this line. -1 indicates no row is selected.
+    val selectedRow: Int = -1 // -1 indicates no row is selected.
 )

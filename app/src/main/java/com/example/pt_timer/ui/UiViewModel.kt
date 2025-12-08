@@ -497,6 +497,22 @@ class UiViewModel(
         }
     }
 
+    fun newTimerData(timerType: Int) {
+        val newTimerData = TimerData.createNew(timerType)
+
+        if (newTimerData.modelType == 0 && timerType != 0) { // Check if it fell back to default
+            Log.w("UiViewModel", "Unknown timer type: $timerType. Using defaults.")
+        } else {
+            Log.i("UiViewModel", "New TimerData created for type: $timerType")
+        }
+
+        _uiState.update { currentState ->
+            currentState.copy(
+                timerData = newTimerData
+            )
+        }
+    }
+
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
