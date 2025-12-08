@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileNotFoundException
+import kotlin.experimental.or
 
 class UiViewModel(
     application: Application,
@@ -166,6 +167,31 @@ class UiViewModel(
                 timerData = currentState.timerData.copy(modelSet = newSet.toIntOrNull() ?: 0)
             )
         }
+    }
+
+    fun updateServoSettingsByte(newSettings: Boolean, position: Int) {
+      _uiState.update { currentState ->
+        // Modify the servoSettingsByte at the specified position
+        val updatedByte = if (newSettings) {
+            setBit(currentState.timerData.servoSettingsByte, position)
+        } else {
+            clearBit(currentState.timerData.servoSettingsByte, position)
+        }
+
+        currentState.copy(
+            timerData = currentState.timerData.copy(servoSettingsByte = updatedByte)
+        )
+      }
+    }
+
+    // Set the bit at the specified position to 1
+    private fun setBit(byte: Byte, position: Int): Byte {
+        return (byte.toInt() or (1 shl position)).toByte()  // Use the bitwise OR operator (|)
+    }
+
+    // Clear the bit at the specified position (set it to 0)
+    private fun clearBit(byte: Byte, position: Int): Byte {
+        return (byte.toInt() and (1 shl position).inv()).toByte()  // Use the bitwise AND operator (&)
     }
 
     fun onGridItemChanged(index: Int, newValue: String) {
