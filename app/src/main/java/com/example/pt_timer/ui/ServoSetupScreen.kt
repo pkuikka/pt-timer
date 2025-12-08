@@ -42,7 +42,7 @@ fun ServoSetupScreen(
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
     // -------- Servo1 settings --------
-    val servoData1 = ServoData1().UpdateServoData(uiState)
+    val servoData1 = ServoData1().updateServoData(uiState)
     Column(modifier = modifier.fillMaxWidth()) {
 
         Row(modifier = modifier.fillMaxWidth()) {
@@ -104,24 +104,23 @@ fun ServoSetupScreen(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
                 )
-
             // Correct: state inside a Composable
-            val checkedState = remember { mutableStateOf(false) }
-            //val checked
+            val servo1InUseCheckedState = remember { mutableStateOf(servoData1.inUse) }
+
             Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
-            )
-            Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
+                checked = servo1InUseCheckedState.value,
+                onCheckedChange = { servo1InUseCheckedState.value = it }
             )
 
-
+            val servo1ReversedCheckedState = remember { mutableStateOf(servoData1.reverse) }
+            Checkbox(
+                checked = servo1ReversedCheckedState.value,
+                onCheckedChange = { servo1ReversedCheckedState.value = it }
+            )
         }
 
         // -------- Servo2 settings --------
-        val servoData2 = ServoData2().UpdateServoData(uiState)
+        val servoData2 = ServoData2().updateServoData(uiState)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -149,19 +148,23 @@ fun ServoSetupScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
-            val checkedState = remember { mutableStateOf(false) }
+            // Correct: state inside a Composable
+            val servo2InUseCheckedState = remember { mutableStateOf(servoData2.inUse) }
+
             Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
+                checked = servo2InUseCheckedState.value,
+                onCheckedChange = { servo2InUseCheckedState.value = it }
             )
+
+            val servo2ReversedCheckedState = remember { mutableStateOf(servoData2.reverse) }
             Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
+                checked = servo2ReversedCheckedState.value,
+                onCheckedChange = { servo2ReversedCheckedState.value = it }
             )
         }
 
         // -------- Servo3 settings --------
-        val servoData3 = ServoData3().UpdateServoData(uiState)
+        val servoData3 = ServoData3().updateServoData(uiState)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -189,20 +192,23 @@ fun ServoSetupScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
+            // Correct: state inside a Composable
+            val servo3InUseCheckedState = remember { mutableStateOf(servoData3.inUse) }
 
-            val checkedState = remember { mutableStateOf(false) }
             Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
+                checked = servo3InUseCheckedState.value,
+                onCheckedChange = { servo3InUseCheckedState.value = it }
             )
+
+            val servo3ReversedCheckedState = remember { mutableStateOf(servoData3.reverse) }
             Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
+                checked = servo3ReversedCheckedState.value,
+                onCheckedChange = { servo3ReversedCheckedState.value = it }
             )
         }
 
         // -------- Servo4 settings --------
-        val servoData4 = ServoData4().UpdateServoData(uiState)
+        val servoData4 = ServoData4().updateServoData(uiState)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -230,14 +236,18 @@ fun ServoSetupScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
-            val checkedState = remember { mutableStateOf(false) }
+            // Correct: state inside a Composable
+            val servo4InUseCheckedState = remember { mutableStateOf(servoData4.inUse) }
+
             Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
+                checked = servo4InUseCheckedState.value,
+                onCheckedChange = { servo4InUseCheckedState.value = it }
             )
+
+            val servo4ReversedCheckedState = remember { mutableStateOf(servoData4.reverse) }
             Checkbox(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it }
+                checked = servo4ReversedCheckedState.value,
+                onCheckedChange = { servo4ReversedCheckedState.value = it }
             )
         }
     }
