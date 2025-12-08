@@ -32,7 +32,7 @@ fun TimerLayout(
         // -------- Model / ID / Set Row --------
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
-                modifier = Modifier.width(220.dp),
+                modifier = Modifier.weight(1f),
                 value = uiState.timerData.modelName,
                 onValueChange = onModelNameChanged,
                 label = { Text("Model") },

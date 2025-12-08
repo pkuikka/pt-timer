@@ -483,7 +483,7 @@ fun BottomButtonsPanel(
                     value = if (btDeviceList.isNotEmpty()) selectedDevice else "Select BT Device",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Select BT Device") },
+                    label = { Text("BT Device") },
                     singleLine = true,
                     maxLines = 1,
                     trailingIcon = {
