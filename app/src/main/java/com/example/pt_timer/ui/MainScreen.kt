@@ -62,6 +62,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
+import com.example.pt_timer.data.TIMER_TYPE_E20
+import com.example.pt_timer.data.TIMER_TYPE_E36
+import com.example.pt_timer.data.TIMER_TYPE_F1A
+import com.example.pt_timer.data.TIMER_TYPE_F1B
+import com.example.pt_timer.data.TIMER_TYPE_F1Q
+import com.example.pt_timer.data.TIMER_TYPE_P30
 
 @SuppressLint("MissingPermission")
 @Composable
@@ -148,6 +154,7 @@ fun MainScreen(
         onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
         onAddRowClick = { mainScreenViewModel.addRow() },
         onDeleteRowClick = { mainScreenViewModel.deleteRow() },
+        onNewTimerDataClick = { timerType -> mainScreenViewModel.newTimerData(timerType) },
         onGridItemChanged = { index, newValue ->
             mainScreenViewModel.onGridItemChanged(
                 index,
@@ -175,6 +182,7 @@ fun MainScreenContent(
     onGridItemChanged: (Int, String) -> Unit,
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
+    onNewTimerDataClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -237,6 +245,57 @@ fun MainScreenContent(
                                 focusManager.clearFocus()
                                 onCloseMenu()
                                 onDeleteRowClick()
+                            }
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New F1A/H timer") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onNewTimerDataClick(TIMER_TYPE_F1A)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New F1B timer") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onNewTimerDataClick(TIMER_TYPE_F1B)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New F1Q timer") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onNewTimerDataClick(TIMER_TYPE_F1Q)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New P-30 timer") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onNewTimerDataClick(TIMER_TYPE_P30)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New E-36 timer") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onNewTimerDataClick(TIMER_TYPE_E36)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("New E-20 timer") },
+                            onClick = {
+                                focusManager.clearFocus()
+                                onCloseMenu()
+                                onNewTimerDataClick(TIMER_TYPE_E20)
                             }
                         )
                     }
@@ -573,6 +632,7 @@ fun MainScreenPreview() {
         onModelSetChanged = {},
         onAddRowClick = {},
         onDeleteRowClick = {},
+        onNewTimerDataClick = {},
         onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
 }

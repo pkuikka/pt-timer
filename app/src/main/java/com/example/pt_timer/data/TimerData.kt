@@ -4,6 +4,12 @@ import kotlinx.serialization.Serializable
 
 const val MAX_TIMER_DATA_ROWS = 16
 const val MAX_TIME_TENTHS_LIMIT = 25
+const val TIMER_TYPE_F1B = 1
+const val TIMER_TYPE_F1A = 2
+const val TIMER_TYPE_P30 = 3
+const val TIMER_TYPE_E36 = 4
+const val TIMER_TYPE_F1Q = 5
+const val TIMER_TYPE_E20 = 6
 
 /**
  * Represents the complete set of timer configuration data.
@@ -13,7 +19,7 @@ const val MAX_TIME_TENTHS_LIMIT = 25
 data class TimerData(
 
     //  Timer data format (Global G_timer_data(256) as Integer):
-    val modelType: Int = 2, // 1 = Timer type: 1 = F1B, 2 = F1A, 3 = P-30, 4 = E-36
+    val modelType: Int = 2, // 1 = F1B, 2 = F1A, 3 = P-30, 4 = E-36, 5 = F1Q, 6 = E-20
     val modelId: Int = 0, // 2 = Model # ID
     val modelSet: Int = 0, // 3 = Data set ID
     val configurationByte: Byte = 1, // 4 = Configuration word:
@@ -26,7 +32,7 @@ data class TimerData(
     // value + 64 = Extended Power Enable (1 = enabled, 0 = disabled)
     // value + 128 = Re-latch hook (1 = re-latch, 0 = conventional hook)
     val batteryWarningVoltage: Double = 7.2,  // 5 = Battery voltage warning
-    val numberOfDataRows: Int = 7, // 6 = Number of data rows
+    val numberOfDataRows: Int = 8, // 6 = Number of data rows
     val servoSettingsByte: Byte = 1, // 7 = Servo 1 - 4 directions:
     // value + 1 = Servo 1 reversed
     // value + 2 = Servo 2 reversed
@@ -36,30 +42,30 @@ data class TimerData(
     // value + 32  = Servo 2 not in use
     // value + 64  = Servo 3 not in use
     // value + 128 = Servo 4 not in use
-    val defaultTemperature: Int = 222, // 8 = Default temperature, which is used if temperature sensor is not giving any readings
+    val defaultTemperature: Int = 198, // 8 = Default temperature, which is used if temperature sensor is not giving any readings
     // Stored as Kelvins + 100, so 200 = 300K = 27C (300-273)
     val buntStatus: Int = 0, //  9 = Reason for not executing the bunt:
     // 1 = longer than the maximum limit
     // 2 = shorter than the minimum limit
-    val startUpCycleCount: Int = 0, // 10 = Timer startup servo cycle count
+    val startUpCycleCount: Int = 255, // 10 = Timer startup servo cycle count
     val servoMidPosition: List<Int> = List(4) { 127 }, // 11 - 14 = Servo 1 - 4 mid position
     val servoRange: List<Int> = List(4) { 127 }, // 15 - 18 = Servo 1 - 4 range
-    val empty19: Int = 0,  // 19, 20 =  empty / reserve
-    val empty20: Int = 0,
+    val empty19: Int = 255,  // 19, 20 =  empty / reserve
+    val empty20: Int = 255,
     val servoTemperatureMidPosition: List<Int> = List(4) { 127 }, // 21 - 24 = Servo 1 - 4 temperature correction mid position
     val servoTemperatureRange: List<Int> = List(4) { 127 }, // 25 - 28 = Servo 1 - 4 temperature range
-    val empty29: Int = 0,  // 29, 30 =  empty / reserve
-    val empty30: Int = 0,
+    val empty29: Int = 255,  // 29, 30 =  empty / reserve
+    val empty30: Int = 255,
     val timerCalibrationInMilliseconds: Int = 15, // 31 =  Timer calibration in milliseconds
     val timerCalibrationInMicroseconds1: Int = 1, // 32 - 33 = Timer calibration in microseconds
     val timerCalibrationInMicroseconds2: Int = 150, // 32 - 33 = Timer calibration in microseconds
     val maxDataRows: Int = MAX_TIMER_DATA_ROWS, // 34 = Maximum amount of data rows
     val firstIndexForDataSetName: Int = 202, // 35 = First index for data set name
-    val maxTimeForSkippingBunt: Int = 0, // 36 =  F1A: max time for skipping bunt
+    val maxTimeForSkippingBunt: Int = 80, // 36 =  F1A: max time for skipping bunt
     val minTimeForSkippingBunt: Int = 0, // 37 =  F1A: min time for skipping bunt (if 0, never skip)
-    val skipBuntGoToRow: Int = 6, // 38 =  F1A: go to this line when skipping bunt
+    val skipBuntGoToRow: Int = 8, // 38 =  F1A: go to this line when skipping bunt
     val dtPowerDownDelay: Int = 0, // 39 = DT power down delay (to keep logger on) from versions 1.55 onwards.
-    val empty40: Int = 0,  // 40 = empty / reserve
+    val empty40: Int = 255,  // 40 = empty / reserve
 
     // 41 - 42, 43, 44 - 47  = Row 1 time * 2 bytes, values for servos 1 - 4, step lines (total of 7 bytes)
     // 48 + 7 = Row 2 time, step lines, and values for servos 1 - 4
@@ -79,14 +85,14 @@ data class TimerData(
     val servo2Label: String = "Servo 2", // 223 - 224 = Servo 2 label
     val servo3Label: String = "Servo 3", // 225 - 226 = Servo 3 label
     val servo4Label: String = "Servo 4", // 227 - 228 = Servo 4 label
-    val empty229: Int = 0,  // 229, 230, 231 = empty / reserve
-    val empty230: Int = 0,
-    val empty231: Int = 0,
+    val empty229: Int = 255,  // 229, 230, 231 = empty / reserve
+    val empty230: Int = 255,
+    val empty231: Int = 255,
     val row1Label: String = "Row 1", // 232 - 236 = Row 1 label
     val row2Label: String = "Row 2", // 237 + 5 = Row 2 label
     val row3Label: String = "Row 3", // 242 + 5 = Row 3 label
     val row4Label: String = "Row 4", // 247 + 5 = Row 4 label
-    val timerVersion: String = "c2.515", // 252 - 256 = timer software version
+    val timerVersion: String = "v2.10", // 252 - 256 = timer software version
 
     // These values are sent after the 256 byte timer data
     val batteryVoltage: Float = 0f,
@@ -203,6 +209,125 @@ data class TimerData(
                 currentTemperature = getUnsignedByte(259) + 100 - 273.toFloat(), // Kelvin to Celsius conversion
                 usedDt = ((getUnsignedByte(260) * 256) + getUnsignedByte(261)) / 10, // count 2 bytes to DT seconds,
             )
+        }
+
+        fun createNew(timerType: Int): TimerData {
+            val defaultTimerData = TimerData()
+
+            return when (timerType) {
+                TIMER_TYPE_F1A -> {
+                    defaultTimerData.copy(
+                        modelType = TIMER_TYPE_F1A,
+                        modelName = "F1A Timer Example",
+                        configurationByte = 37.toByte(),
+                        servoSettingsByte = 0.toByte(),
+                        numberOfDataRows = 8,
+                        servo1Label = "EL",
+                        servo2Label = "RD",
+                        servo3Label = "WW",
+                        servo4Label = "--",
+                        row1Label = "DT   ",
+                        row2Label = "CIRC ",
+                        row3Label = "FWD  ",
+                        row4Label = "ACCEL",
+                    )
+                }
+                TIMER_TYPE_F1B -> {
+                    defaultTimerData.copy(
+                        modelType = TIMER_TYPE_F1B,
+                        modelName = "F1B Timer Example",
+                        configurationByte = 4.toByte(),
+                        servoSettingsByte = 0.toByte(),
+                        numberOfDataRows = 6,
+                        servo1Label = "EL",
+                        servo2Label = "RD",
+                        servo3Label = "WW",
+                        servo4Label = "--",
+                        row1Label = "DT   ",
+                        row2Label = "ARM  ",
+                        row3Label = "START",
+                        row4Label = "     ",
+                    )
+                }
+                TIMER_TYPE_F1Q -> {
+                    defaultTimerData.copy(
+                        modelType = TIMER_TYPE_F1Q,
+                        modelName = "F1Q Timer Examole",
+                        configurationByte = 4.toByte(),
+                        servoSettingsByte = 0.toByte(),
+                        numberOfDataRows = 6,
+                        servo1Label = "EL",
+                        servo2Label = "RD",
+                        servo3Label = "WW",
+                        servo4Label = "SC",
+                        row1Label = "DT   ",
+                        row2Label = "ARM  ",
+                        row3Label = "START",
+                        row4Label = "     ",
+                    )
+                }
+                TIMER_TYPE_P30 -> {
+                    defaultTimerData.copy(
+                        modelType = timerType,
+                        modelName = "P-30 Timer Example",
+                        configurationByte = 4.toByte(),
+                        servoSettingsByte = 224.toByte(),
+                        numberOfDataRows = 5,
+                        maxDataRows = 7,
+                        firstIndexForDataSetName = 85,
+                        servo1Label = "S1",
+                        servo2Label = "--",
+                        servo3Label = "--",
+                        servo4Label = "--",
+                        row1Label = "DT   ",
+                        row2Label = "ARM  ",
+                        row3Label = "START",
+                        row4Label = "     ",
+                    )
+                }
+                TIMER_TYPE_E36 -> {
+                    defaultTimerData.copy(
+                        modelType = timerType,
+                        modelName = "E-36 Timer Example",
+                        configurationByte = 4.toByte(),
+                        servoSettingsByte = 192.toByte(),
+                        numberOfDataRows = 5,
+                        maxDataRows = 7,
+                        firstIndexForDataSetName = 85,
+                        servo1Label = "SC",
+                        servo2Label = "S1",
+                        servo3Label = "--",
+                        servo4Label = "--",
+                        row1Label = "DT   ",
+                        row2Label = "ARM  ",
+                        row3Label = "START",
+                        row4Label = "     ",
+                    )
+                }
+                TIMER_TYPE_E20 -> {
+                    defaultTimerData.copy(
+                        modelType = timerType,
+                        modelName = "E-20 Timer Example",
+                        configurationByte = 4.toByte(),
+                        servoSettingsByte = 0.toByte(),
+                        numberOfDataRows = 5,
+                        maxDataRows = 7,
+                        firstIndexForDataSetName = 85,
+                        servo1Label = "SC",
+                        servo2Label = "S1",
+                        servo3Label = "--",
+                        servo4Label = "--",
+                        row1Label = "DT   ",
+                        row2Label = "ARM  ",
+                        row3Label = "START",
+                        row4Label = "     ",
+                    )
+                }
+                else -> {
+                    // It's good practice to handle the unknown case
+                    defaultTimerData
+                }
+            }
         }
     }
 
