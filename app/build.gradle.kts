@@ -85,6 +85,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.6") // Or the latest stable version
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation(libs.material)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.compose.foundation.layout)
 
     testImplementation(libs.junit)
 

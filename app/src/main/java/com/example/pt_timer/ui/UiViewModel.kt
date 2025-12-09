@@ -237,7 +237,6 @@ fun onServoRangeChanged(index: Int, newValue: String) {
             currentState.copy(timerData = updatedTimerData)
         }
     }
-
     fun onUpdateServoSettingsByte(newSettings: Boolean, position: Int) {
       _uiState.update { currentState ->
         // Modify the servoSettingsByte at the specified position

@@ -5,8 +5,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +19,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -42,19 +46,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -177,8 +181,8 @@ fun MainScreen(
         onServoRange = { index, newServoRange ->
             mainScreenViewModel.onServoRangeChanged(index, newServoRange)
         },
-        onUpdateServoSettingsByte = { newServoSettings, position ->
-            mainScreenViewModel.onUpdateServoSettingsByte(newServoSettings, position)
+        onUpdateServoSettingsByte = { isSet, bitValue ->
+            mainScreenViewModel.onUpdateServoSettingsByte(isSet, bitValue)
         }
     )
 }
@@ -381,63 +385,125 @@ fun TabLayout(
     onServoRange: (Int, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Persisting the selected tab index
-    var state by rememberSaveable { mutableIntStateOf(0) }
-    val titles = listOf("Timer setup", "Servo setup", "Settings")
+
+    TimerLayoutRefresh(
+        uiState,
+        onModelNameChanged,
+        onModelIdChanged,
+        onModelSetChanged
+    ) // Possibly refresh the timer setup
+
 
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_small))
     ) {
-        // Tab Row for navigating between different sections
-        PrimaryTabRow(
-            modifier = Modifier.height(35.dp),
-            selectedTabIndex = state
+
+        var state by remember { mutableStateOf(0) }
+        val distanceThreshold = 150f
+        val velocityThreshold = 600f
+        val titles = listOf("Timer setup", "Servo setup", "Settings")
+
+        val velocityTracker = remember { VelocityTracker() }
+        var dragAmountTotal by remember { mutableStateOf(0f) }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = {
+                            dragAmountTotal = 0f
+                            velocityTracker.resetTracking()
+                        },
+                        onHorizontalDrag = { change, dragAmount ->
+                            dragAmountTotal += dragAmount
+                            velocityTracker.addPosition(
+                                change.uptimeMillis,
+                                change.position
+                            )
+                        },
+                        onDragEnd = {
+                            val velocity = velocityTracker.calculateVelocity().x
+
+                            // Swipe Right
+                            if (
+                                dragAmountTotal > distanceThreshold ||
+                                velocity > velocityThreshold
+                            ) {
+                                if (state > 0) state--
+                            }
+
+                            // Swipe Left
+                            if (
+                                dragAmountTotal < -distanceThreshold ||
+                                velocity < -velocityThreshold
+                            ) {
+                                if (state < titles.size - 1) state++
+                            }
+                        }
+                    )
+                }
         ) {
-            titles.forEachIndexed { index, title ->
-                Tab(
-                    modifier = Modifier.height(25.dp),
-                    selected = state == index,
-                    onClick = { state = index },
-                    selectedContentColor = Color.DarkGray,
-                    unselectedContentColor = Color.Gray,
-                    text = {
-                        Text(
-                            modifier = Modifier.fillMaxSize(),
-                            text = title,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            fontSize = 15.sp
+
+            Column(Modifier.fillMaxSize()) {
+
+                // TAB ROW
+                PrimaryTabRow(
+                    modifier = Modifier.height(20.dp),
+                    selectedTabIndex = state
+                ) {
+                    titles.forEachIndexed { index, title ->
+                        Tab(
+                            selected = state == index,
+                            onClick = { state = index },
+                            modifier = Modifier
+                                .height(28.dp)
+                                .padding(horizontal = 4.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(
+                                    if (state == index) Color(0xFFE0E0E0)
+                                    else Color.Transparent
+                                ),
+                            text = {
+                                Text(
+                                    text = title,
+                                    color = if (state == index) Color.Black else Color.Gray,
+                                    fontSize = 13.sp
+                                )
+                            }
                         )
                     }
-                )
+                }
+
+
+
+                // SCREEN CONTENT
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    when (state) {
+                        0 -> TimerSetupTabContent(
+                            uiState,
+                            onGridItemChanged
+                        )
+
+                        1 -> ServoSetupTabContent(
+                            uiState,
+                            onUpdateServoSettingsByte,
+                            onServoLabelNameChanged,
+                            onServoMidPosition,
+                            onServoRange
+                        )
+
+                        2 -> SettingsTabContent(
+                            uiState,
+                            onUpdateServoSettingsByte,
+                        )
+                    }
+                }
             }
-        }
-
-        // Tab content based on the selected index
-
-        when (state) {
-
-            0 -> TimerSetupTabContent(
-                uiState,
-                onModelNameChanged,
-                onModelIdChanged,
-                onModelSetChanged,
-                onGridItemChanged
-            )
-
-            1 -> ServoSetupTabContent(
-                uiState,
-                onUpdateServoSettingsByte,
-                onServoLabelNameChanged,
-                onServoMidPosition,
-                onServoRange
-            )
-
-            2 -> SettingsTabContent(
-                uiState,
-                onUpdateConfigurationByte = onUpdateConfigurationByte
-            )
         }
     }
 }
@@ -454,17 +520,8 @@ fun StartTabContent(uiState: UiState) {
 @Composable
 fun TimerSetupTabContent(
     uiState: UiState,
-    onModelNameChanged: (String) -> Unit,
-    onModelIdChanged: (String) -> Unit,
-    onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
 ) {
-    TimerLayoutRefresh(
-        uiState,
-        onModelNameChanged,
-        onModelIdChanged,
-        onModelSetChanged
-    ) // Possibly refresh the timer setup
     TimerDataGridLayout(uiState, onGridItemChanged)
 }
 
@@ -485,7 +542,6 @@ fun ServoSetupTabContent(
         onServoRange
     ) // Possibly refresh the timer setup
 }
-
 @Composable
 fun SettingsTabContent(
     uiState: UiState,
