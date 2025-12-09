@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,7 +27,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pt_timer.data.TimerData
-
 
 @Composable
 fun TimerDataGridLayout(
@@ -57,10 +57,11 @@ fun TimerDataGridLayout(
         // The actual numerical data from the device
         var data = listOf<String>()
         for (i in 0 until (uiState.timerData.numberOfDataRows)) {
-            data = if (uiState.timerData.timeValues[i] < com.example.pt_timer.data.MAX_TIME_TENTHS_LIMIT)
-                data + uiState.timerData.timeValues[i].toString()
-            else
-                data + uiState.timerData.timeValues[i].toInt().toString()
+            data =
+                if (uiState.timerData.timeValues[i] < com.example.pt_timer.data.MAX_TIME_TENTHS_LIMIT)
+                    data + uiState.timerData.timeValues[i].toString()
+                else
+                    data + uiState.timerData.timeValues[i].toInt().toString()
             data = data + uiState.timerData.servo1Values[i].toString()
             data = data + uiState.timerData.servo2Values[i].toString()
             data = data + uiState.timerData.servo3Values[i].toString()
@@ -75,7 +76,7 @@ fun TimerDataGridLayout(
         for (i in 0 until (uiState.timerData.numberOfDataRows)) {
             // Add the row header for this row
             if (i < rowHeaders.size) {
-                if (i+1 == uiState.timerData.skipBuntGoToRow) // header row is the +1
+                if (i + 1 == uiState.timerData.skipBuntGoToRow) // header row is the +1
                     combinedList.add("-->")
                 else
                     combinedList.add(rowHeaders[i])
@@ -91,6 +92,23 @@ fun TimerDataGridLayout(
     }
 
     Column(modifier = modifier.fillMaxWidth()) {
+        // -------- Status Row --------
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = " ", style = typography.bodyMedium)
+            Text(text = "DT at timer ${uiState.timerData.usedDt}", style = typography.titleSmall)
+            Text(
+                text = "Current ${uiState.timerData.batteryVoltage / 10}V",
+                style = typography.titleSmall
+            )
+            Text(
+                text = "Min ${uiState.timerData.batteryLowestVoltage / 10}V",
+                style = typography.titleSmall
+            )
+        }
+        // -------- Grid --------
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
@@ -141,16 +159,6 @@ fun TimerDataGridLayout(
     }
 }
 
-/*
-@Composable
-fun TimerDataGridLayoutRefresh(
-    uiState: UiState,
-    onGridItemChanged: (Int, String) -> Unit,
-) {
-    // Optionally, you could update the ViewModel with new TimerData
-    TimerDataGridLayout(uiState, onGridItemChanged)
-}*/
-
 @Preview
 @Composable
 fun TimerDataGridLayoutPreview() {
@@ -159,11 +167,7 @@ fun TimerDataGridLayoutPreview() {
         timerData = TimerData(
             modelName = "Test Model",
             modelId = 1,
-            modelSet = 2,
-            usedDt = 10,
-            batteryVoltage = 3.7f,
-            batteryLowestVoltage = 3.3f,
-            currentTemperature = 22.5f
+            modelSet = 2
         )
     )
 
@@ -171,7 +175,6 @@ fun TimerDataGridLayoutPreview() {
     TimerDataGridLayout(
         uiState = uiState,
         onGridItemChanged = { index, value ->
-            // Implement your logic here, for now just log it
             println("Grid item changed: Index = $index, Value = $value")
         }
     )

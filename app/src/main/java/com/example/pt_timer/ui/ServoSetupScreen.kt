@@ -29,8 +29,6 @@ import androidx.compose.ui.unit.dp
 import com.example.pt_timer.data.GlobalData
 import com.example.pt_timer.data.TimerData
 
-
-
 @Composable
 fun ServoSetupScreen(
     uiState: UiState,

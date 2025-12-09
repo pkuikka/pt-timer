@@ -5,5 +5,5 @@ package com.example.pt_timer.ui.navigation
  */
 enum class Screen {
     Main,
-    Settings
+    UserSettings
 }

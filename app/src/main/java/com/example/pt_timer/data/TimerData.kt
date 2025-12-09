@@ -104,6 +104,7 @@ data class TimerData(
     val isSwitch2Enabled: Boolean get() = (configurationByte.toInt() and 2) != 0
     val isRdtEnabled: Boolean get() = (configurationByte.toInt() and 4) != 0
     val isBeepOnTowEnabled: Boolean get() = (configurationByte.toInt() and 32) != 0
+
     //val isExternalPowerEnabled: Boolean get() = (configurationByte.toInt() and 64) != 0
     val isReLatchEnabled: Boolean get() = (configurationByte.toInt() and 128) != 0
 
@@ -232,6 +233,7 @@ data class TimerData(
                         row4Label = "ACCEL",
                     )
                 }
+
                 TIMER_TYPE_F1B -> {
                     defaultTimerData.copy(
                         modelType = TIMER_TYPE_F1B,
@@ -249,6 +251,7 @@ data class TimerData(
                         row4Label = "     ",
                     )
                 }
+
                 TIMER_TYPE_F1Q -> {
                     defaultTimerData.copy(
                         modelType = TIMER_TYPE_F1Q,
@@ -266,6 +269,7 @@ data class TimerData(
                         row4Label = "     ",
                     )
                 }
+
                 TIMER_TYPE_P30 -> {
                     defaultTimerData.copy(
                         modelType = timerType,
@@ -285,6 +289,7 @@ data class TimerData(
                         row4Label = "     ",
                     )
                 }
+
                 TIMER_TYPE_E36 -> {
                     defaultTimerData.copy(
                         modelType = timerType,
@@ -304,6 +309,7 @@ data class TimerData(
                         row4Label = "     ",
                     )
                 }
+
                 TIMER_TYPE_E20 -> {
                     defaultTimerData.copy(
                         modelType = timerType,
@@ -323,6 +329,7 @@ data class TimerData(
                         row4Label = "     ",
                     )
                 }
+
                 else -> {
                     // It's good practice to handle the unknown case
                     defaultTimerData

@@ -12,12 +12,10 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
-// 1. Keep the constructor clean, only accepting dependencies.
 class UserPreferencesRepository(
     private val dataStore: DataStore<Preferences>
 ) {
-    // 2. Define the Flow property inside the class body.
-    //    'dataStore' is now a fully initialized property of the class and can be safely accessed.
+    //  'dataStore' is now a fully initialized property of the class and can be safely accessed.
     val timerWriteDelayMillis: Flow<Float> = dataStore.data
         .catch {
             if(it is IOException) {

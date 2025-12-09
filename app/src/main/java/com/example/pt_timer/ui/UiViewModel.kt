@@ -228,12 +228,9 @@ fun onServoRangeChanged(index: Int, newValue: String) {
                 currentByte and bitValue.inv()
             }
 
-            // Create a new TimerData object with the updated byte
             val updatedTimerData = currentState.timerData.copy(
                 configurationByte = newByte.toByte()
             )
-
-            // Update the state
             currentState.copy(timerData = updatedTimerData)
         }
     }

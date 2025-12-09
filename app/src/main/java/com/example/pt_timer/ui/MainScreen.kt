@@ -159,7 +159,7 @@ fun MainScreen(
         onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
         onAddRowClick = { mainScreenViewModel.addRow() },
         onDeleteRowClick = { mainScreenViewModel.deleteRow() },
-        onNewTimerDataClick= { mainScreenViewModel.newTimerData(it) },
+        onNewTimerDataClick = { mainScreenViewModel.newTimerData(it) },
         onGridItemChanged = { index, newValue ->
             mainScreenViewModel.onGridItemChanged(
                 index,
@@ -172,7 +172,7 @@ fun MainScreen(
         onServoLabelNameChanged = { index, newLabelName ->
             mainScreenViewModel.onServoLabelNameChanged(
                 index,
-               newLabelName
+                newLabelName
             )
         },
         onServoMidPosition = { index, newServoMidPosition ->
@@ -281,7 +281,6 @@ fun MainScreenContent(
                         DropdownMenuItem(
                             text = { Text("New F1A/H timer") },
                             onClick = {
-                                focusManager.clearFocus()
                                 onCloseMenu()
                                 onNewTimerDataClick(TIMER_TYPE_F1A)
                             }
@@ -289,7 +288,6 @@ fun MainScreenContent(
                         DropdownMenuItem(
                             text = { Text("New F1B timer") },
                             onClick = {
-                                focusManager.clearFocus()
                                 onCloseMenu()
                                 onNewTimerDataClick(TIMER_TYPE_F1B)
                             }
@@ -297,7 +295,6 @@ fun MainScreenContent(
                         DropdownMenuItem(
                             text = { Text("New F1Q timer") },
                             onClick = {
-                                focusManager.clearFocus()
                                 onCloseMenu()
                                 onNewTimerDataClick(TIMER_TYPE_F1Q)
                             }
@@ -305,7 +302,6 @@ fun MainScreenContent(
                         DropdownMenuItem(
                             text = { Text("New P-30 timer") },
                             onClick = {
-                                focusManager.clearFocus()
                                 onCloseMenu()
                                 onNewTimerDataClick(TIMER_TYPE_P30)
                             }
@@ -313,7 +309,6 @@ fun MainScreenContent(
                         DropdownMenuItem(
                             text = { Text("New E-36 timer") },
                             onClick = {
-                                focusManager.clearFocus()
                                 onCloseMenu()
                                 onNewTimerDataClick(TIMER_TYPE_E36)
                             }
@@ -321,7 +316,6 @@ fun MainScreenContent(
                         DropdownMenuItem(
                             text = { Text("New E-20 timer") },
                             onClick = {
-                                focusManager.clearFocus()
                                 onCloseMenu()
                                 onNewTimerDataClick(TIMER_TYPE_E20)
                             }
@@ -386,13 +380,7 @@ fun TabLayout(
     modifier: Modifier = Modifier
 ) {
 
-    TimerLayoutRefresh(
-        uiState,
-        onModelNameChanged,
-        onModelIdChanged,
-        onModelSetChanged
-    ) // Possibly refresh the timer setup
-
+    TimerLayout(uiState, onModelNameChanged, onModelIdChanged, onModelSetChanged)
 
     Column(
         modifier = modifier,
@@ -514,7 +502,6 @@ fun StartTabContent(uiState: UiState) {
     Text(timerData.modelName) // Display the model name from the timer data
 }*/
 
-// Tab 1: Timer Setup content
 @Composable
 fun TimerSetupTabContent(
     uiState: UiState,
@@ -531,25 +518,24 @@ fun ServoSetupTabContent(
     onServoMidPosition: (Int, String) -> Unit,
     onServoRange: (Int, String) -> Unit
 ) {
-
     ServoSetupScreen(
         uiState,
         onUpdateServoSettingsByte,
         onServoLabelNameChanged,
         onServoMidPosition,
         onServoRange
-    ) // Possibly refresh the timer setup
+    )
 }
+
 @Composable
 fun SettingsTabContent(
     uiState: UiState,
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
 ) {
-
     SettingsScreen(
         uiState,
         onUpdateConfigurationByte
-    ) // Possibly refresh the timer setup
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -619,7 +605,8 @@ fun BottomButtonsPanel(
 
             // Read Button
             val isReadButtonEnabled = true
-            Button(onClick = onReadClick,
+            Button(
+                onClick = onReadClick,
                 enabled = isReadButtonEnabled
             ) {
                 Text(text = stringResource(R.string.button_read), fontSize = 16.sp)
@@ -670,15 +657,15 @@ fun FileSelectionDialog(
 ) {
     if (files.isEmpty()) {
         AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text("There are no saved files to select.") },
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("OK")
+            onDismissRequest = onDismiss,
+            title = { Text(title) },
+            text = { Text("There are no saved files to select.") },
+            confirmButton = {
+                Button(onClick = onDismiss) {
+                    Text("OK")
+                }
             }
-        }
-    )
+        )
         return
     }
 

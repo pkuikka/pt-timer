@@ -11,7 +11,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pt_timer.ui.navigation.Screen
 import android.Manifest
 
-
 @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
 @Composable
 fun TimerApp() {
@@ -20,28 +19,25 @@ fun TimerApp() {
     val uiState by uiViewModel.uiState.collectAsState()
 
     NavHost(
-        navController = navController,
-        startDestination = Screen.Main.name
+        navController = navController, startDestination = Screen.Main.name
     ) {
         // Define the MainScreen
         composable(route = Screen.Main.name) {
             MainScreen(
                 onUserSettingsClick = {
-                    navController.navigate(Screen.Settings.name)
-                }
-            )
+                    navController.navigate(Screen.UserSettings.name)
+                })
         }
 
         // Define the UserSettingsScreen
-        composable(route = Screen.Settings.name) {
+        composable(route = Screen.UserSettings.name) {
             UserSettingsScreen(
                 writeCommunicationDelay = uiState.writeCommunicationDelay,
                 onDelayChanged = uiViewModel::onDelayChanged,
                 // Add a lambda to handle navigating back
                 onNavigateUp = {
                     navController.navigateUp()
-                }
-            )
+                })
         }
     }
 }

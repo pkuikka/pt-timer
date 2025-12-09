@@ -96,7 +96,7 @@ fun SettingsScreen(
                 onUpdateConfigByte(isChecked, 2)
             })
         RowWithText("Hook type")
-        RowWithCheckBox("Re-latch (not checked is convetional)", value = uiState.timerData.isReLatchEnabled,
+        RowWithCheckBox("Re-latch (not checked is conventional)", value = uiState.timerData.isReLatchEnabled,
             onValueChange = { isChecked ->
                 // Call the function passed from the ViewModel.
                 // The bit value for RDT is 4.
