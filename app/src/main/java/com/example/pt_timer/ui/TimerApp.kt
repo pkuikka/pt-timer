@@ -26,7 +26,7 @@ fun TimerApp() {
         // Define the MainScreen
         composable(route = Screen.Main.name) {
             MainScreen(
-                onSettingsClick = {
+                onUserSettingsClick = {
                     navController.navigate(Screen.Settings.name)
                 }
             )

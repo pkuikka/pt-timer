@@ -47,7 +47,7 @@ data class TimerData(
     val buntStatus: Int = 0, //  9 = Reason for not executing the bunt:
     // 1 = longer than the maximum limit
     // 2 = shorter than the minimum limit
-    val startUpCycleCount: Int = 255, // 10 = Timer startup servo cycle count
+    val startUpCycleCount: Int = 0, // 10 = Timer startup servo cycle count
     val servoMidPosition: List<Int> = List(4) { 127 }, // 11 - 14 = Servo 1 - 4 mid position
     val servoRange: List<Int> = List(4) { 127 }, // 15 - 18 = Servo 1 - 4 range
     val empty19: Int = 255,  // 19, 20 =  empty / reserve
@@ -125,13 +125,6 @@ data class TimerData(
             // Helper to get an unsigned byte value as an Int
             fun getUnsignedByte(index: Int): Int = packetBytes[index].toInt() and 0xFF
 
-            // Unsigned Int from two bytes (Little Endian: LSB, MSB)
-            fun getUnsignedInt(startIndex: Int): Int {
-                val lsb = getUnsignedByte(startIndex)
-                val msb = getUnsignedByte(startIndex + 1)
-                return msb * 256 + lsb
-            }
-
             // Map main timer values
             // Row 1 time * 2 bytes, values for servos 1 - 4, step lines (total of 7 bytes)
             val indices = 0 until MAX_TIMER_DATA_ROWS
@@ -169,9 +162,9 @@ data class TimerData(
                 empty30 = 0,
 
                 // Multi-byte values
-                timerCalibrationInMilliseconds = getUnsignedInt(31),
-                timerCalibrationInMicroseconds1 = getUnsignedInt(32),
-                timerCalibrationInMicroseconds2 = getUnsignedInt(33),
+                timerCalibrationInMilliseconds = getUnsignedByte(31),
+                timerCalibrationInMicroseconds1 = getUnsignedByte(32),
+                timerCalibrationInMicroseconds2 = getUnsignedByte(33),
 
                 // Single byte values
                 maxDataRows = getUnsignedByte(34),

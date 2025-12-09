@@ -73,7 +73,7 @@ import com.example.pt_timer.data.TIMER_TYPE_P30
 @SuppressLint("MissingPermission")
 @Composable
 fun MainScreen(
-    onSettingsClick: () -> Unit,
+    onUserSettingsClick: () -> Unit,
     mainScreenViewModel: UiViewModel = viewModel(
         factory = UiViewModel.Factory
     )
@@ -149,7 +149,7 @@ fun MainScreen(
         },
         onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
         onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
-        onSettingsClick = onSettingsClick,
+        onUserSettingsClick = onUserSettingsClick,
         onModelNameChanged = { newName -> mainScreenViewModel.onModelNameChanged(newName) },
         onModelIdChanged = { newIdString -> mainScreenViewModel.onModelIdChanged(newIdString) },
         onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
@@ -191,7 +191,7 @@ fun MainScreenContent(
     onDeleteClick: () -> Unit,
     onDeviceSelected: (String) -> Unit,
     onRefreshDevices: () -> Unit,
-    onSettingsClick: () -> Unit,
+    onUserSettingsClick: () -> Unit,
     onModelNameChanged: (String) -> Unit,
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
@@ -242,14 +242,14 @@ fun MainScreenContent(
                         onDismissRequest = { onCloseMenu() }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Settings") },
+                            text = { Text("User settings") },
                             onClick = {
                                 onCloseMenu()
-                                onSettingsClick()
+                                onUserSettingsClick()
                             }
                         )
                         HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = 6.dp)
                         )
                         DropdownMenuItem(
                             text = { Text("Add row below") },
@@ -377,7 +377,7 @@ fun TabLayout(
 ) {
     // Persisting the selected tab index
     var state by rememberSaveable { mutableIntStateOf(0) }
-    val titles = listOf("Timer setup", "Servo setup", "information")
+    val titles = listOf("Timer setup", "Servo setup", "Settings")
 
     Column(
         modifier = modifier,
@@ -428,6 +428,13 @@ fun TabLayout(
                 onServoRange
             )
 
+            2 -> SettingsTabContent(
+                uiState,
+                onUpdateServoSettingsByte,
+                onServoLabelNameChanged,
+                onServoMidPosition,
+                onServoRange
+            )
         }
     }
 }
@@ -476,6 +483,23 @@ fun ServoSetupTabContent(
     ) // Possibly refresh the timer setup
 }
 
+@Composable
+fun SettingsTabContent(
+    uiState: UiState,
+    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
+    onServoLabelNameChanged: (Int, String) -> Unit,
+    onServoMidPosition: (Int, String) -> Unit,
+    onServoRange: (Int, String) -> Unit
+) {
+
+    SettingsScreen(
+        uiState,
+        onUpdateServoSettingsByte,
+        onServoLabelNameChanged,
+        onServoMidPosition,
+        onServoRange
+    ) // Possibly refresh the timer setup
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomButtonsPanel(
@@ -662,7 +686,7 @@ fun MainScreenPreview() {
         onDeleteClick = {},
         onDeviceSelected = {},
         onRefreshDevices = {},
-        onSettingsClick = {},
+        onUserSettingsClick = {},
         onModelNameChanged = {},
         onModelIdChanged = {},
         onModelSetChanged = {},
