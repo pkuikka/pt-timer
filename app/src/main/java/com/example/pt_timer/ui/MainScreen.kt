@@ -156,9 +156,6 @@ fun MainScreen(
         onAddRowClick = { mainScreenViewModel.addRow() },
         onDeleteRowClick = { mainScreenViewModel.deleteRow() },
         onNewTimerDataClick= { mainScreenViewModel.newTimerData(it) },
-        onUpdateConfigurationByte = { isSet, bitValue ->
-            mainScreenViewModel.updateConfigurationByte(isSet, bitValue)
-        },
         onGridItemChanged = { index, newValue ->
             mainScreenViewModel.onGridItemChanged(
                 index,
@@ -202,7 +199,6 @@ fun MainScreenContent(
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
     onNewTimerDataClick: (Int) -> Unit,
-    onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
     onServoMidPosition: (Int, String) -> Unit,
@@ -356,7 +352,6 @@ fun MainScreenContent(
                 onModelIdChanged,
                 onModelSetChanged,
                 onGridItemChanged,
-                onUpdateConfigurationByte,
                 onUpdateServoSettingsByte,
                 onServoLabelNameChanged,
                 onServoMidPosition,
@@ -374,7 +369,6 @@ fun TabLayout(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
-    onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
     onServoMidPosition: (Int, String) -> Unit,
