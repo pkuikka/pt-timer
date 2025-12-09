@@ -156,6 +156,9 @@ fun MainScreen(
         onAddRowClick = { mainScreenViewModel.addRow() },
         onDeleteRowClick = { mainScreenViewModel.deleteRow() },
         onNewTimerDataClick= { mainScreenViewModel.newTimerData(it) },
+        onUpdateConfigurationByte = { isSet, bitValue ->
+            mainScreenViewModel.updateConfigurationByte(isSet, bitValue)
+        },
         onGridItemChanged = { index, newValue ->
             mainScreenViewModel.onGridItemChanged(
                 index,
@@ -199,6 +202,7 @@ fun MainScreenContent(
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
     onNewTimerDataClick: (Int) -> Unit,
+    onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
     onServoMidPosition: (Int, String) -> Unit,
@@ -352,6 +356,7 @@ fun MainScreenContent(
                 onModelIdChanged,
                 onModelSetChanged,
                 onGridItemChanged,
+                onUpdateConfigurationByte,
                 onUpdateServoSettingsByte,
                 onServoLabelNameChanged,
                 onServoMidPosition,
@@ -369,6 +374,7 @@ fun TabLayout(
     onModelIdChanged: (String) -> Unit,
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
+    onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
     onServoMidPosition: (Int, String) -> Unit,
@@ -430,10 +436,7 @@ fun TabLayout(
 
             2 -> SettingsTabContent(
                 uiState,
-                onUpdateServoSettingsByte,
-                onServoLabelNameChanged,
-                onServoMidPosition,
-                onServoRange
+                onUpdateConfigurationByte = onUpdateConfigurationByte
             )
         }
     }
@@ -486,18 +489,12 @@ fun ServoSetupTabContent(
 @Composable
 fun SettingsTabContent(
     uiState: UiState,
-    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPosition: (Int, String) -> Unit,
-    onServoRange: (Int, String) -> Unit
+    onUpdateConfigurationByte: (Boolean, Int) -> Unit,
 ) {
 
     SettingsScreen(
         uiState,
-        onUpdateServoSettingsByte,
-        onServoLabelNameChanged,
-        onServoMidPosition,
-        onServoRange
+        onUpdateConfigurationByte
     ) // Possibly refresh the timer setup
 }
 @OptIn(ExperimentalMaterial3Api::class)
@@ -694,6 +691,7 @@ fun MainScreenPreview() {
         onDeleteRowClick = {},
         onNewTimerDataClick = {},
         onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
+        onUpdateConfigurationByte = { _, _ -> },
         onUpdateServoSettingsByte = { newSettings, position -> println("Servo settings byte updated: $newSettings at position $position") },
         onServoLabelNameChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
         onServoMidPosition = { index, value -> println("Grid item changed: Index = $index, Value = $value") },

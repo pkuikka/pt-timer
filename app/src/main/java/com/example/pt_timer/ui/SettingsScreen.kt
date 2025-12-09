@@ -4,11 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
@@ -35,7 +32,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pt_timer.R
-import com.example.pt_timer.data.GlobalData
 import com.example.pt_timer.data.TimerData
 
 fun modelTypeAsString(modelType: Int): String {
@@ -53,11 +49,7 @@ fun modelTypeAsString(modelType: Int): String {
 @Composable
 fun SettingsScreen(
     uiState: UiState,
-    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPosition: (Int, String) -> Unit,
-    onServoRange: (Int, String) -> Unit,
-    modifier: Modifier = Modifier
+    onUpdateConfigByte: (Boolean, Int) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -68,8 +60,18 @@ fun SettingsScreen(
         RowWithField("Number of data lines", "${uiState.timerData.numberOfDataRows}")
         RowWithField("Critical voltage", "${uiState.timerData.batteryWarningVoltage}")
         RowWithField("Power-off delay after DT (seconds)", "${uiState.timerData.dtPowerDownDelay}")
-        RowWithCheckBox("RDT enabled", value = true)
-        RowWithCheckBox("Beep on tow", value = true)
+        RowWithCheckBox("RDT enabled", value = uiState.timerData.isRdtEnabled,
+            onValueChange = { isChecked ->
+                // Call the function passed from the ViewModel.
+                // The bit value for RDT is 4.
+                onUpdateConfigByte(isChecked, 4)
+            })
+        RowWithCheckBox("Beep on tow", value = uiState.timerData.isBeepOnTowEnabled,
+            onValueChange = { isChecked ->
+                // Call the function passed from the ViewModel.
+                // The bit value for RDT is 4.
+                onUpdateConfigByte(isChecked, 32)
+            })
 
         // --- Hook settings ---
         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
@@ -79,17 +81,33 @@ fun SettingsScreen(
         )
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
         RowWithText("Reverse switches")
-        RowWithCheckBox("Tow", value = true)
-        RowWithCheckBox("Latch", value = true)
+        RowWithCheckBox(
+            "Tow",
+            value = uiState.timerData.isSwitch1Enabled,
+            onValueChange = { isChecked ->
+                // Call the function passed from the ViewModel.
+                // The bit value for RDT is 4.
+                onUpdateConfigByte(isChecked, 1)
+            })
+        RowWithCheckBox("Latch", value = uiState.timerData.isSwitch2Enabled,
+            onValueChange = { isChecked ->
+                // Call the function passed from the ViewModel.
+                // The bit value for RDT is 4.
+                onUpdateConfigByte(isChecked, 2)
+            })
         RowWithText("Hook type")
-        RowWithCheckBox("Conventional", value = false)
-        RowWithCheckBox("Re-latch", value = true)
-        RowWithField("Re-latch critical time (seconds)", "${uiState.timerData.maxTimeForSkippingBunt/10}")
+        RowWithCheckBox("Re-latch (not checked is convetional)", value = uiState.timerData.isReLatchEnabled,
+            onValueChange = { isChecked ->
+                // Call the function passed from the ViewModel.
+                // The bit value for RDT is 4.
+                onUpdateConfigByte(isChecked, 128)
+            })
+        RowWithField("Re-latch critical time (seconds)", "${uiState.timerData.maxTimeForSkippingBunt.toDouble() / 10.0}")
 
         // --- Advanced settings ---
         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
         Text(
-            text = "Adcanced timer settings",
+            text = "Advanced timer settings",
             style = typography.titleMedium
         )
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
@@ -145,17 +163,17 @@ fun RowWithField(
 @Composable
 fun RowWithCheckBox(
     text: String,
-    value: Boolean
+    value: Boolean,
+    onValueChange: (Boolean) -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val reversed = remember { mutableStateOf(value) }
         Checkbox(
             checked = value,
             onCheckedChange = {
-                reversed.value = it
+                onValueChange(it)
             }
         )
         Text(
@@ -228,13 +246,7 @@ fun SettingsScreenPreview() {
     )
     SettingsScreen(
         uiState = uiState,
-        onUpdateServoSettingsByte = { newSettings, position ->
-            // Example logic for updating the servo settings byte
-            println("Servo settings byte updated: $newSettings at position $position")
-        },
-        onServoLabelNameChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoMidPosition = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoRange = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
+        onUpdateConfigByte = { _, _ -> },
     )
 }
 

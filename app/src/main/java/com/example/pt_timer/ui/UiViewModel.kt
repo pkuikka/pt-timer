@@ -217,6 +217,27 @@ fun onServoRangeChanged(index: Int, newValue: String) {
         GlobalData.createServoDataList(uiState.value)
     }
 
+    fun updateConfigurationByte(isSet: Boolean, bitValue: Int) {
+        _uiState.update { currentState ->
+            val currentByte = currentState.timerData.configurationByte.toInt()
+            val newByte = if (isSet) {
+                // Set the bit (bitwise OR)
+                currentByte or bitValue
+            } else {
+                // Unset the bit (bitwise AND with the inverted bitValue)
+                currentByte and bitValue.inv()
+            }
+
+            // Create a new TimerData object with the updated byte
+            val updatedTimerData = currentState.timerData.copy(
+                configurationByte = newByte.toByte()
+            )
+
+            // Update the state
+            currentState.copy(timerData = updatedTimerData)
+        }
+    }
+
     fun onUpdateServoSettingsByte(newSettings: Boolean, position: Int) {
       _uiState.update { currentState ->
         // Modify the servoSettingsByte at the specified position

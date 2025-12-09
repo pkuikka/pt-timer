@@ -60,7 +60,7 @@ data class TimerData(
     val timerCalibrationInMicroseconds1: Int = 1, // 32 - 33 = Timer calibration in microseconds
     val timerCalibrationInMicroseconds2: Int = 150, // 32 - 33 = Timer calibration in microseconds
     val maxDataRows: Int = MAX_TIMER_DATA_ROWS, // 34 = Maximum amount of data rows
-    val firstIndexForDataSetName: Int = 202, // 35 = First index for data set name
+    val firstIndexForDataSetName: Int = 160, // 35 = First index for data set name
     val maxTimeForSkippingBunt: Int = 80, // 36 =  F1A: max time for skipping bunt
     val minTimeForSkippingBunt: Int = 0, // 37 =  F1A: min time for skipping bunt (if 0, never skip)
     val skipBuntGoToRow: Int = 8, // 38 =  F1A: go to this line when skipping bunt
@@ -100,6 +100,13 @@ data class TimerData(
     val currentTemperature: Float = 0f,
     val usedDt: Int = 0, // Counts together configured DT time + DIP switches
 ) {
+    val isSwitch1Enabled: Boolean get() = (configurationByte.toInt() and 1) != 0
+    val isSwitch2Enabled: Boolean get() = (configurationByte.toInt() and 2) != 0
+    val isRdtEnabled: Boolean get() = (configurationByte.toInt() and 4) != 0
+    val isBeepOnTowEnabled: Boolean get() = (configurationByte.toInt() and 32) != 0
+    //val isExternalPowerEnabled: Boolean get() = (configurationByte.toInt() and 64) != 0
+    val isReLatchEnabled: Boolean get() = (configurationByte.toInt() and 128) != 0
+
     companion object {
         /**
          * Factory function to create a TimerData object from the raw 256-byte packet
