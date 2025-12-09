@@ -40,7 +40,7 @@ fun TimerLayout(
             )
 
             OutlinedTextField(
-                modifier = Modifier.width(70.dp),
+                modifier = Modifier.width(68.dp),
                 value = uiState.timerData.modelId.toString(),
                 onValueChange = onModelIdChanged,
                 label = { Text("ID") },
@@ -49,7 +49,7 @@ fun TimerLayout(
             )
 
             OutlinedTextField(
-                modifier = Modifier.width(70.dp),
+                modifier = Modifier.width(68.dp),
                 value = uiState.timerData.modelSet.toString(),
                 onValueChange = onModelSetChanged,
                 label = { Text("Set") },
