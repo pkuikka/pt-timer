@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.pt_timer.BtCommunication
 import com.example.pt_timer.PtTimerApplication
+import com.example.pt_timer.data.GlobalData
 import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
 import com.example.pt_timer.data.ServoData1
 import com.example.pt_timer.data.ServoData2
@@ -201,6 +202,7 @@ fun onServoRangeChanged(index: Int, newValue: String) {
         }
         currentState.copy(timerData = currentState.timerData.copy(servoRange = updatedList))
     }
+    GlobalData.createServoDataList(uiState.value)
 }
 
     fun servoMidPosition(index: Int, newValue: String) {
@@ -212,6 +214,7 @@ fun onServoRangeChanged(index: Int, newValue: String) {
             }
             currentState.copy(timerData = currentState.timerData.copy(servoMidPosition = updatedList))
         }
+        GlobalData.createServoDataList(uiState.value)
     }
 
     fun onUpdateServoSettingsByte(newSettings: Boolean, position: Int) {
@@ -227,6 +230,7 @@ fun onServoRangeChanged(index: Int, newValue: String) {
             timerData = currentState.timerData.copy(servoSettingsByte = updatedByte)
         )
       }
+      GlobalData.createServoDataList(uiState.value)
     }
 
     // Set the bit at the specified position to 1
@@ -341,6 +345,7 @@ fun onServoRangeChanged(index: Int, newValue: String) {
                 Log.e("UiViewModel", "Failed to load file: $filename", e)
             }
         }
+        GlobalData.createServoDataList(uiState.value)
     }
 
     fun saveJsonToFile() {

@@ -350,6 +350,7 @@ fun TabLayout(
         }
 
         // Tab content based on the selected index
+
         when (state) {
 
             0 -> TimerSetupTabContent(
@@ -406,6 +407,7 @@ fun ServoSetupTabContent(
     onServoMidPosition: (Int, String) -> Unit,
     onServoRange: (Int, String) -> Unit
 ) {
+
     ServoSetupScreen(
         uiState,
         onUpdateServoSettingsByte,
