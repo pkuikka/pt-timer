@@ -476,8 +476,6 @@ fun TabLayout(
                     }
                 }
 
-
-
                 // SCREEN CONTENT
                 Box(
                     modifier = Modifier
@@ -499,7 +497,7 @@ fun TabLayout(
 
                         2 -> SettingsTabContent(
                             uiState,
-                            onUpdateServoSettingsByte,
+                            onUpdateConfigurationByte,
                         )
                     }
                 }
@@ -553,6 +551,7 @@ fun SettingsTabContent(
         onUpdateConfigurationByte
     ) // Possibly refresh the timer setup
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomButtonsPanel(
