@@ -1,7 +1,5 @@
 package com.example.pt_timer.data
-
 import kotlinx.serialization.Serializable
-import com.example.pt_timer.data.TimerData
 import com.example.pt_timer.ui.UiState
 
 /**
@@ -15,6 +13,54 @@ fun isBitSet(byte: Byte, bitPosition: Int): Boolean {
 }
 
 @Serializable
+data class ServoData(
+    val name: String = "",
+    val midPos: Int = 0,
+    val range: Int = 0,
+    val reverse: Boolean = false,
+    val inUse: Boolean = false
+) {
+    fun createServoDataList(uiState: UiState): List<ServoData> {
+        // Store instances and update them
+        val servoData1 = ServoData1().updateServoData(uiState)
+        val servoData2 = ServoData2().updateServoData(uiState)
+        val servoData3 = ServoData3().updateServoData(uiState)
+        val servoData4 = ServoData4().updateServoData(uiState)
+
+        // Create the list using the updated instances
+        val servoDataList: List<ServoData> = listOf(
+            ServoData(
+                servoData1.name,
+                servoData1.midPos,
+                servoData1.range,
+                servoData1.reverse,
+                servoData1.inUse
+            ),
+            ServoData(
+                servoData2.name,
+                servoData2.midPos,
+                servoData2.range,
+                servoData2.reverse,
+                servoData2.inUse
+            ),
+            ServoData(
+                servoData3.name,
+                servoData3.midPos,
+                servoData3.range,
+                servoData3.reverse,
+                servoData3.inUse
+            ),
+            ServoData(
+                servoData4.name,
+                servoData4.midPos,
+                servoData4.range,
+                servoData4.reverse,
+                servoData4.inUse
+            )
+        )
+        return servoDataList
+    }
+}
 data class ServoData1(
     val name: String = "",
     val midPos: Int = 0,

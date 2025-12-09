@@ -17,6 +17,9 @@ import com.example.pt_timer.BtCommunication
 import com.example.pt_timer.PtTimerApplication
 import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
 import com.example.pt_timer.data.ServoData1
+import com.example.pt_timer.data.ServoData2
+import com.example.pt_timer.data.ServoData3
+import com.example.pt_timer.data.ServoData4
 import com.example.pt_timer.data.TimerData
 import com.example.pt_timer.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileNotFoundException
-import kotlin.experimental.or
+
 
 class UiViewModel(
     application: Application,
@@ -171,6 +174,46 @@ class UiViewModel(
         }
     }
 
+    fun onServoLabelNameChanged(index: Int, newName: String) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                timerData = when (index) {
+                    1 -> currentState.timerData.copy(servo1Label = newName)
+                    2 -> currentState.timerData.copy(servo2Label = newName)
+                    3 -> currentState.timerData.copy(servo3Label = newName)
+                    4 -> currentState.timerData.copy(servo4Label = newName)
+                    else -> {
+                        // Handle other cases if necessary
+                        Log.w("ServoLabel", "Unhandled index: $index")
+                        currentState.timerData // No change if index is not 1 or 2
+                    }
+                }
+            )
+        }
+    }
+
+fun onServoRangeChanged(index: Int, newValue: String) {
+    val newIntValue = newValue.toIntOrNull() ?: 0
+    _uiState.update { currentState ->
+        val currentServoRange = currentState.timerData.servoRange
+        val updatedList: List<Int> = currentServoRange.mapIndexed { i, value ->
+            if (i == index) newIntValue else value
+        }
+        currentState.copy(timerData = currentState.timerData.copy(servoRange = updatedList))
+    }
+}
+
+    fun servoMidPosition(index: Int, newValue: String) {
+        val newIntValue = newValue.toIntOrNull() ?: 0
+        _uiState.update { currentState ->
+            val currentServoMidPos = currentState.timerData.servoMidPosition
+            val updatedList: List<Int> = currentServoMidPos.mapIndexed { i, value ->
+                if (i == index) newIntValue else value
+            }
+            currentState.copy(timerData = currentState.timerData.copy(servoMidPosition = updatedList))
+        }
+    }
+
     fun onUpdateServoSettingsByte(newSettings: Boolean, position: Int) {
       _uiState.update { currentState ->
         // Modify the servoSettingsByte at the specified position
@@ -188,12 +231,12 @@ class UiViewModel(
 
     // Set the bit at the specified position to 1
     private fun setBit(byte: Byte, position: Int): Byte {
-        return (byte.toInt() or (1 shl position)).toByte()  // Use the bitwise OR operator (|)
+        return (byte.toInt() or (1 shl position)).toByte()
     }
 
     // Clear the bit at the specified position (set it to 0)
     private fun clearBit(byte: Byte, position: Int): Byte {
-        return (byte.toInt() and (1 shl position).inv()).toByte()  // Use the bitwise AND operator (&)
+        return (byte.toInt() and (1 shl position).inv()).toByte()
     }
 
     fun onGridItemChanged(index: Int, newValue: String) {
@@ -264,6 +307,10 @@ class UiViewModel(
             _uiState.update { currentState ->
                 currentState.copy(timerData = newTimerData)
             }
+            ServoData1().updateServoData(uiState.value)
+            ServoData2().updateServoData(uiState.value)
+            ServoData3().updateServoData(uiState.value)
+            ServoData4().updateServoData(uiState.value)
         } catch (e: IllegalArgumentException) {
             // Handle the case where the packet is the wrong size
             Log.e("DataParsing", "Received invalid packet: ${e.message}")

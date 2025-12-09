@@ -63,6 +63,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
 
+
 @SuppressLint("MissingPermission")
 @Composable
 fun MainScreen(
@@ -154,10 +155,20 @@ fun MainScreen(
                 newValue
             )
         },
-        onUpdateServoSettingsByte = { newServoSettings, position ->
-            mainScreenViewModel.onUpdateServoSettingsByte(newServoSettings, position
-
+        onServoLabelNameChanged = { index, newLabelName ->
+            mainScreenViewModel.onServoLabelNameChanged(
+                index,
+               newLabelName
             )
+        },
+        onServoMidPosition = { index, newServoMidPosition ->
+            mainScreenViewModel.servoMidPosition(index, newServoMidPosition)
+        },
+        onServoRange = { index, newServoRange ->
+            mainScreenViewModel.onServoRangeChanged(index, newServoRange)
+        },
+        onUpdateServoSettingsByte = { newServoSettings, position ->
+            mainScreenViewModel.onUpdateServoSettingsByte(newServoSettings, position)
         }
     )
 }
@@ -181,7 +192,10 @@ fun MainScreenContent(
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    modifier: Modifier = Modifier,
+    onServoLabelNameChanged: (Int, String) -> Unit,
+    onServoMidPosition: (Int, String) -> Unit,
+    onServoRange: (Int, String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -279,7 +293,10 @@ fun MainScreenContent(
                 onModelIdChanged,
                 onModelSetChanged,
                 onGridItemChanged,
-                onUpdateServoSettingsByte
+                onUpdateServoSettingsByte,
+                onServoLabelNameChanged,
+                onServoMidPosition,
+                onServoRange
             )
         }
     }
@@ -294,6 +311,9 @@ fun TabLayout(
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
+    onServoLabelNameChanged: (Int, String) -> Unit,
+    onServoMidPosition: (Int, String) -> Unit,
+    onServoRange: (Int, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Persisting the selected tab index
@@ -331,7 +351,7 @@ fun TabLayout(
 
         // Tab content based on the selected index
         when (state) {
-            //0 -> StartTabContent(uiState)
+
             0 -> TimerSetupTabContent(
                 uiState,
                 onModelNameChanged,
@@ -343,9 +363,11 @@ fun TabLayout(
             1 -> ServoSetupTabContent(
                 uiState,
                 onUpdateServoSettingsByte,
-                onModelNameChanged
+                onServoLabelNameChanged,
+                onServoMidPosition,
+                onServoRange
             )
-            // Add other tabs as necessary
+
         }
     }
 }
@@ -380,12 +402,16 @@ fun TimerSetupTabContent(
 fun ServoSetupTabContent(
     uiState: UiState,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onModelNameChanged: (String) -> Unit
+    onServoLabelNameChanged: (Int, String) -> Unit,
+    onServoMidPosition: (Int, String) -> Unit,
+    onServoRange: (Int, String) -> Unit
 ) {
     ServoSetupScreen(
         uiState,
         onUpdateServoSettingsByte,
-        onModelNameChanged,
+        onServoLabelNameChanged,
+        onServoMidPosition,
+        onServoRange
     ) // Possibly refresh the timer setup
 }
 
@@ -455,9 +481,13 @@ fun BottomButtonsPanel(
             }
 
             // Read Button
-            Button(onClick = onReadClick) {
+            val isReadButtonEnabled = true
+            Button(onClick = onReadClick,
+                enabled = isReadButtonEnabled
+            ) {
                 Text(text = stringResource(R.string.button_read), fontSize = 16.sp)
             }
+
 
             // Write Button
             OutlinedButton(onClick = {
@@ -578,10 +608,10 @@ fun MainScreenPreview() {
         onAddRowClick = {},
         onDeleteRowClick = {},
         onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onUpdateServoSettingsByte = { newSettings, position ->
-            // Example logic for updating the servo settings byte
-            println("Servo settings byte updated: $newSettings at position $position")
-        }
+        onUpdateServoSettingsByte = { newSettings, position -> println("Servo settings byte updated: $newSettings at position $position") },
+        onServoLabelNameChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
+        onServoMidPosition = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
+        onServoRange = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
 }
 
