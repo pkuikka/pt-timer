@@ -81,6 +81,22 @@ class UiViewModel(
             }
         }
         viewModelScope.launch {
+            userPreferencesRepository.displaySwipeVelocity.collect { displaySwipeVelocity ->
+                // 3. Update the UI state with the value from the repository
+                _uiState.update { currentState ->
+                    currentState.copy(writeCommunicationDelay = displaySwipeVelocity)
+                }
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.displaySwipeDistance.collect { displaySwipeDistance ->
+                // 3. Update the UI state with the value from the repository
+                _uiState.update { currentState ->
+                    currentState.copy(writeCommunicationDelay = displaySwipeDistance)
+                }
+            }
+        }
+        viewModelScope.launch {
             userPreferencesRepository.selectedBtDevice.collect { deviceName ->
                 _uiState.update { currentState ->
                     currentState.copy(selectedBtDevice = deviceName)
@@ -140,6 +156,17 @@ class UiViewModel(
     fun onDelayChanged(delay: Float) {
         viewModelScope.launch {
             userPreferencesRepository.saveLayoutPreference(delay)
+        }
+    }
+
+    fun onSwipeVelocityChanged(delay: Float) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveSwipeVelocity(delay)
+        }
+    }
+    fun onSwipeDistanceChange(delay: Float) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveSwipeDistance(delay)
         }
     }
 

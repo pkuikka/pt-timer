@@ -29,6 +29,32 @@ class UserPreferencesRepository(
             // If the key doesn't exist, return the default value of 100F
             preferences[TIMER_WRITE_DELAY_MILLIS] ?: 100F
         }
+    val displaySwipeVelocity: Flow<Float> = dataStore.data
+        .catch {
+            if(it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            // If the key doesn't exist, return the default value of 100F
+            preferences[DISPLAY_SWIPE_VELOCITY] ?: 150F
+        }
+    val displaySwipeDistance: Flow<Float> = dataStore.data
+        .catch {
+            if(it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }
+        .map { preferences ->
+            // If the key doesn't exist, return the default value of 100F
+            preferences[DISPLAY_SWIPE_DISTANCE] ?: 600F
+        }
 
     val selectedBtDevice: Flow<String> = dataStore.data
         .catch {
@@ -46,6 +72,8 @@ class UserPreferencesRepository(
 
     private companion object {
         val TIMER_WRITE_DELAY_MILLIS = floatPreferencesKey("timer_write_delay_millis")
+        val DISPLAY_SWIPE_VELOCITY = floatPreferencesKey("display_swipe_velocity")
+        val DISPLAY_SWIPE_DISTANCE = floatPreferencesKey("display_swipe_distance")
         val SELECTED_BT_DEVICE = stringPreferencesKey("selected_bt_device")
 
         const val TAG = "UserPreferencesRepo"
@@ -54,6 +82,18 @@ class UserPreferencesRepository(
     suspend fun saveLayoutPreference(timerWriteDelayMillis: Float) {
         dataStore.edit { preferences ->
             preferences[TIMER_WRITE_DELAY_MILLIS] = timerWriteDelayMillis
+        }
+    }
+
+    suspend fun saveSwipeVelocity(displaySwipeVelocity: Float) {
+        dataStore.edit { preferences ->
+            preferences[DISPLAY_SWIPE_VELOCITY] = displaySwipeVelocity
+        }
+    }
+
+    suspend fun saveSwipeDistance(displaySwipeDistance: Float) {
+        dataStore.edit { preferences ->
+            preferences[DISPLAY_SWIPE_DISTANCE] = displaySwipeDistance
         }
     }
 

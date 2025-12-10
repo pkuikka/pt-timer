@@ -37,7 +37,13 @@ fun TimerApp() {
                 // Add a lambda to handle navigating back
                 onNavigateUp = {
                     navController.navigateUp()
-                })
+                },
+                displaySwipeVelocity = uiState.displaySwipeVelocity,
+                onSwipeVelocityChanged = uiViewModel::onSwipeVelocityChanged,
+                displaySwipeDistance = uiState.displaySwipeDistance,
+                onSwipeDistanceChange = uiViewModel::onSwipeDistanceChange
+            )
+
         }
     }
 }

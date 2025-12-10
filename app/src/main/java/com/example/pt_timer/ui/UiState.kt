@@ -15,5 +15,9 @@ data class UiState(
     val savedFiles: List<String> = emptyList(), // List of saved files
 
     // UI helpers
-    val selectedRow: Int = -1 // -1 indicates no row is selected.
+    val selectedRow: Int = -1, // -1 indicates no row is selected.
+
+    // Display settings
+    var displaySwipeVelocity: Float = 150F,
+    var displaySwipeDistance: Float = 600F,
 )

@@ -388,8 +388,8 @@ fun TabLayout(
     ) {
 
         var state by remember { mutableStateOf(0) }
-        val distanceThreshold = 150f
-        val velocityThreshold = 600f
+        val distanceThreshold = uiState.displaySwipeDistance
+        val velocityThreshold = uiState.displaySwipeVelocity
         val titles = listOf("Timer setup", "Servo setup", "Settings")
 
         val velocityTracker = remember { VelocityTracker() }
