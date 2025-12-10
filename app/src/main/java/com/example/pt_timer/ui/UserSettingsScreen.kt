@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.pt_timer.BuildConfig
 import com.example.pt_timer.R
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserSettingsScreen(
@@ -80,11 +81,13 @@ fun UserSettingsScreen(
                 )
             }
 
+            var newWriteCommunicationDelay = writeCommunicationDelay
             Slider(
-                value = writeCommunicationDelay,
-                onValueChange = onDelayChanged,
-                valueRange = 50f..500f,
-                steps = 8
+                value = newWriteCommunicationDelay,
+                onValueChange = { newWriteCommunicationDelay = it },
+                steps = 9,
+                valueRange = 50f..550f,
+                onValueChangeFinished = { onDelayChanged(newWriteCommunicationDelay) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -102,12 +105,13 @@ fun UserSettingsScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-
+            var displaySwipeVelocity = displaySwipeVelocity
             Slider(
                 value = displaySwipeVelocity,
-                onValueChange = onSwipeVelocityChanged,
-                valueRange = 50f..300f,
-                steps = 10
+                onValueChange = { displaySwipeVelocity = it },
+                steps = 9,
+                valueRange = 50f..550f,
+                onValueChangeFinished = { onSwipeVelocityChanged(displaySwipeVelocity) }
             )
 
             Row(Modifier.fillMaxWidth()) {
@@ -117,15 +121,19 @@ fun UserSettingsScreen(
                 )
             }
 
+            var newDisplaySwipeDistance = displaySwipeDistance
             Slider(
-                value = displaySwipeDistance,
-                onValueChange = onSwipeDistanceChange,
-                valueRange = 100f..900f,
-                steps = 10
+                value = newDisplaySwipeDistance,
+                onValueChange = { newDisplaySwipeDistance = it },
+                steps = 19,
+                valueRange = 50f..1050f,
+                onValueChangeFinished = { onSwipeDistanceChange(newDisplaySwipeDistance) }
             )
         }
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable

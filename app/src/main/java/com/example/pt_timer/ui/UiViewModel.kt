@@ -84,7 +84,7 @@ class UiViewModel(
             userPreferencesRepository.displaySwipeVelocity.collect { displaySwipeVelocity ->
                 // 3. Update the UI state with the value from the repository
                 _uiState.update { currentState ->
-                    currentState.copy(writeCommunicationDelay = displaySwipeVelocity)
+                    currentState.copy(displaySwipeVelocity = displaySwipeVelocity)
                 }
             }
         }
@@ -92,7 +92,7 @@ class UiViewModel(
             userPreferencesRepository.displaySwipeDistance.collect { displaySwipeDistance ->
                 // 3. Update the UI state with the value from the repository
                 _uiState.update { currentState ->
-                    currentState.copy(writeCommunicationDelay = displaySwipeDistance)
+                    currentState.copy(displaySwipeDistance = displaySwipeDistance)
                 }
             }
         }
