@@ -15,12 +15,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.pt_timer.BtCommunication
 import com.example.pt_timer.PtTimerApplication
-import com.example.pt_timer.data.GlobalData
 import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
-import com.example.pt_timer.data.ServoData1
-import com.example.pt_timer.data.ServoData2
-import com.example.pt_timer.data.ServoData3
-import com.example.pt_timer.data.ServoData4
 import com.example.pt_timer.data.TimerData
 import com.example.pt_timer.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -164,6 +159,7 @@ class UiViewModel(
             userPreferencesRepository.saveSwipeVelocity(delay)
         }
     }
+
     fun onSwipeDistanceChange(delay: Float) {
         viewModelScope.launch {
             userPreferencesRepository.saveSwipeDistance(delay)
@@ -205,14 +201,14 @@ class UiViewModel(
     fun onServoLabelNameChanged(index: Int, newName: String) {
         _uiState.update { currentState ->
             currentState.copy(
-                timerData = when (index) {
+                timerData = when (index + 1) {
                     1 -> currentState.timerData.copy(servo1Label = newName)
                     2 -> currentState.timerData.copy(servo2Label = newName)
                     3 -> currentState.timerData.copy(servo3Label = newName)
                     4 -> currentState.timerData.copy(servo4Label = newName)
                     else -> {
                         // Handle other cases if necessary
-                        Log.w("ServoLabel", "Unhandled index: $index")
+                        Log.w("UiViewModel", "Servo label unhandled index: $index")
                         currentState.timerData // No change if index is not 1 or 2
                     }
                 }
@@ -220,17 +216,16 @@ class UiViewModel(
         }
     }
 
-fun onServoRangeChanged(index: Int, newValue: String) {
-    val newIntValue = newValue.toIntOrNull() ?: 0
-    _uiState.update { currentState ->
-        val currentServoRange = currentState.timerData.servoRange
-        val updatedList: List<Int> = currentServoRange.mapIndexed { i, value ->
-            if (i == index) newIntValue else value
+    fun onServoRangeChanged(index: Int, newValue: String) {
+        val newIntValue = newValue.toIntOrNull() ?: 0
+        _uiState.update { currentState ->
+            val currentServoRange = currentState.timerData.servoRange
+            val updatedList: List<Int> = currentServoRange.mapIndexed { i, value ->
+                if (i == index) newIntValue else value
+            }
+            currentState.copy(timerData = currentState.timerData.copy(servoRange = updatedList))
         }
-        currentState.copy(timerData = currentState.timerData.copy(servoRange = updatedList))
     }
-    GlobalData.createServoDataList(uiState.value)
-}
 
     fun servoMidPosition(index: Int, newValue: String) {
         val newIntValue = newValue.toIntOrNull() ?: 0
@@ -241,12 +236,24 @@ fun onServoRangeChanged(index: Int, newValue: String) {
             }
             currentState.copy(timerData = currentState.timerData.copy(servoMidPosition = updatedList))
         }
-        GlobalData.createServoDataList(uiState.value)
     }
 
-    fun updateConfigurationByte(isSet: Boolean, bitValue: Int) {
+    fun updateCheckBoxesWithByte(
+        isSet: Boolean,
+        bitValue: Int,
+        updateServoSettingsByte: Boolean = false
+    ) {
+        Log.i(
+            "UiViewModel", "updateCheckBoxesWithByte: isSet=$isSet," +
+                    " bitValue=$bitValue, updateServoSettingsByte=$updateServoSettingsByte"
+        )
         _uiState.update { currentState ->
-            val currentByte = currentState.timerData.configurationByte.toInt()
+            val currentByte = if (updateServoSettingsByte) {
+                currentState.timerData.servoSettingsByte.toInt()
+            } else {
+                currentState.timerData.configurationByte.toInt()
+            }
+
             val newByte = if (isSet) {
                 // Set the bit (bitwise OR)
                 currentByte or bitValue
@@ -255,36 +262,14 @@ fun onServoRangeChanged(index: Int, newValue: String) {
                 currentByte and bitValue.inv()
             }
 
-            val updatedTimerData = currentState.timerData.copy(
-                configurationByte = newByte.toByte()
-            )
+            val updatedTimerData = if (updateServoSettingsByte) {
+                currentState.timerData.copy(servoSettingsByte = newByte.toByte())
+            } else {
+                currentState.timerData.copy(configurationByte = newByte.toByte())
+            }
+
             currentState.copy(timerData = updatedTimerData)
         }
-    }
-    fun onUpdateServoSettingsByte(newSettings: Boolean, position: Int) {
-      _uiState.update { currentState ->
-        // Modify the servoSettingsByte at the specified position
-        val updatedByte = if (newSettings) {
-            setBit(currentState.timerData.servoSettingsByte, position)
-        } else {
-            clearBit(currentState.timerData.servoSettingsByte, position)
-        }
-
-        currentState.copy(
-            timerData = currentState.timerData.copy(servoSettingsByte = updatedByte)
-        )
-      }
-      GlobalData.createServoDataList(uiState.value)
-    }
-
-    // Set the bit at the specified position to 1
-    private fun setBit(byte: Byte, position: Int): Byte {
-        return (byte.toInt() or (1 shl position)).toByte()
-    }
-
-    // Clear the bit at the specified position (set it to 0)
-    private fun clearBit(byte: Byte, position: Int): Byte {
-        return (byte.toInt() and (1 shl position).inv()).toByte()
     }
 
     fun onGridItemChanged(index: Int, newValue: String) {
@@ -310,28 +295,36 @@ fun onServoRangeChanged(index: Int, newValue: String) {
                         }
                         currentState.timerData.copy(timeValues = updatedList)
                     }
+
                     2 -> { // Servo 1 values
-                        val updatedList = currentState.timerData.servo1Values.toMutableList().apply {
-                            this[row - 1] = newIntValue
-                        }
+                        val updatedList =
+                            currentState.timerData.servo1Values.toMutableList().apply {
+                                this[row - 1] = newIntValue
+                            }
                         currentState.timerData.copy(servo1Values = updatedList)
                     }
+
                     3 -> { // Servo 2 values
-                        val updatedList = currentState.timerData.servo2Values.toMutableList().apply {
-                            this[row - 1] = newIntValue
-                        }
+                        val updatedList =
+                            currentState.timerData.servo2Values.toMutableList().apply {
+                                this[row - 1] = newIntValue
+                            }
                         currentState.timerData.copy(servo2Values = updatedList)
                     }
+
                     4 -> { // Servo 3 values
-                        val updatedList = currentState.timerData.servo3Values.toMutableList().apply {
-                            this[row - 1] = newIntValue
-                        }
+                        val updatedList =
+                            currentState.timerData.servo3Values.toMutableList().apply {
+                                this[row - 1] = newIntValue
+                            }
                         currentState.timerData.copy(servo3Values = updatedList)
                     }
+
                     5 -> { // Servo 4 values
-                        val updatedList = currentState.timerData.servo4Values.toMutableList().apply {
-                            this[row - 1] = newIntValue
-                        }
+                        val updatedList =
+                            currentState.timerData.servo4Values.toMutableList().apply {
+                                this[row - 1] = newIntValue
+                            }
                         currentState.timerData.copy(servo4Values = updatedList)
                     }
                     // We assume there are only 5 editable columns.
@@ -355,10 +348,6 @@ fun onServoRangeChanged(index: Int, newValue: String) {
             _uiState.update { currentState ->
                 currentState.copy(timerData = newTimerData)
             }
-            ServoData1().updateServoData(uiState.value)
-            ServoData2().updateServoData(uiState.value)
-            ServoData3().updateServoData(uiState.value)
-            ServoData4().updateServoData(uiState.value)
         } catch (e: IllegalArgumentException) {
             // Handle the case where the packet is the wrong size
             Log.e("DataParsing", "Received invalid packet: ${e.message}")
@@ -378,18 +367,19 @@ fun onServoRangeChanged(index: Int, newValue: String) {
                 _uiState.update { it.copy(timerData = loadedTimerData) }
                 Log.i("UiViewModel", "File loaded: $filename")
                 android.os.Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(applicationContext, "Loaded: $filename", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Loaded: $filename", Toast.LENGTH_SHORT)
+                        .show()
                 }
             } catch (e: FileNotFoundException) {
                 Log.e("UiViewModel", "File not found: $filename", e)
                 android.os.Handler(Looper.getMainLooper()).post {
-                    Toast.makeText(applicationContext, "Error: File not found.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, "Error: File not found.", Toast.LENGTH_SHORT)
+                        .show()
                 }
             } catch (e: Exception) {
                 Log.e("UiViewModel", "Failed to load file: $filename", e)
             }
         }
-        GlobalData.createServoDataList(uiState.value)
     }
 
     fun saveJsonToFile() {
@@ -408,14 +398,16 @@ fun onServoRangeChanged(index: Int, newValue: String) {
 
             Log.i("UiViewModel", "Successfully saved file to $filename")
             android.os.Handler(Looper.getMainLooper()).post {
-                Toast.makeText(applicationContext, "File saved successfully!", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "File saved successfully!", Toast.LENGTH_LONG)
+                    .show()
             }
             getSavedFilesList()
 
         } catch (e: Exception) {
             Log.e("UiViewModel", "Failed to save file", e)
             android.os.Handler(Looper.getMainLooper()).post {
-                Toast.makeText(applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG).show()
+                Toast.makeText(applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG)
+                    .show()
             }
         }
     }
@@ -429,7 +421,8 @@ fun onServoRangeChanged(index: Int, newValue: String) {
                     if (deleted) {
                         Log.i("UiViewModel", "File deleted: $filename")
                         android.os.Handler(Looper.getMainLooper()).post {
-                            Toast.makeText(applicationContext, "File deleted.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(applicationContext, "File deleted.", Toast.LENGTH_SHORT)
+                                .show()
                         }
                         getSavedFilesList()
                     }
@@ -450,7 +443,11 @@ fun onServoRangeChanged(index: Int, newValue: String) {
             // No row is selected, do nothing or show a Toast
             Log.w("UiViewModel", "Add row action called but no row is selected.")
             android.os.Handler(Looper.getMainLooper()).post {
-                Toast.makeText(applicationContext, "Please select a row to add from column 1.", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    applicationContext,
+                    "Please select a row to add from column 1.",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
             return
@@ -458,7 +455,8 @@ fun onServoRangeChanged(index: Int, newValue: String) {
 
         // Check that 'static' rows are not broken
         if ((rowToAdd <= 3 && _uiState.value.timerData.modelType == 2) ||
-            (rowToAdd <= 2 && _uiState.value.timerData.modelType == 1)) {
+            (rowToAdd <= 2 && _uiState.value.timerData.modelType == 1)
+        ) {
             Log.i("UiViewModel", "Cannot add row here. Row=$rowToAdd")
             android.os.Handler(Looper.getMainLooper()).post {
                 Toast.makeText(applicationContext, "Cannot add row here.", Toast.LENGTH_SHORT)
@@ -471,7 +469,11 @@ fun onServoRangeChanged(index: Int, newValue: String) {
         if (uiState.value.timerData.numberOfDataRows + 1 > MAX_TIMER_DATA_ROWS) {
             Log.i("UiViewModel", "Cannot add more that $MAX_TIMER_DATA_ROWS rows.")
             android.os.Handler(Looper.getMainLooper()).post {
-                Toast.makeText(applicationContext, "Cannot add more that $MAX_TIMER_DATA_ROWS rows.", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    applicationContext,
+                    "Cannot add more that $MAX_TIMER_DATA_ROWS rows.",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
             return
@@ -492,11 +494,11 @@ fun onServoRangeChanged(index: Int, newValue: String) {
 
             // Shift all data rows down starting from the biggest row number
             for (i in (newNumberOfRows - 2) downTo (rowToAdd - 1)) {
-                newTimeValues[i+1] = newTimeValues[i]
-                newServo1Values[i+1] = newServo1Values[i]
-                newServo2Values[i+1] = newServo2Values[i]
-                newServo3Values[i+1] = newServo3Values[i]
-                newServo4Values[i+1] = newServo4Values[i]
+                newTimeValues[i + 1] = newTimeValues[i]
+                newServo1Values[i + 1] = newServo1Values[i]
+                newServo2Values[i + 1] = newServo2Values[i]
+                newServo3Values[i + 1] = newServo3Values[i]
+                newServo4Values[i + 1] = newServo4Values[i]
             }
 
             // Remember to move the bunt safety line if it's affected
@@ -531,7 +533,11 @@ fun onServoRangeChanged(index: Int, newValue: String) {
             // No row is selected, do nothing or show a Toast
             Log.w("UiViewModel", "Delete row action called but no row is selected.")
             android.os.Handler(Looper.getMainLooper()).post {
-                Toast.makeText(applicationContext, "Please select a row to delete from column 1.", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    applicationContext,
+                    "Please select a row to delete from column 1.",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
             return
@@ -539,7 +545,8 @@ fun onServoRangeChanged(index: Int, newValue: String) {
 
         // Check that 'static' rows are not deleted
         if ((rowToDelete <= 4 && _uiState.value.timerData.modelType == 2) ||
-            (rowToDelete <= 3 && _uiState.value.timerData.modelType == 1)) {
+            (rowToDelete <= 3 && _uiState.value.timerData.modelType == 1)
+        ) {
             Log.i("UiViewModel", "Cannot delete this row. Row=$rowToDelete")
             android.os.Handler(Looper.getMainLooper()).post {
                 Toast.makeText(applicationContext, "Cannot delete this row.", Toast.LENGTH_SHORT)

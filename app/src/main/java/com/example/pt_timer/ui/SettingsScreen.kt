@@ -59,17 +59,17 @@ fun SettingsScreen(
         RowWithText("Model type ${modelTypeAsString(uiState.timerData.modelType)}")
         RowWithField("Number of data lines", "${uiState.timerData.numberOfDataRows}")
         RowWithField("Critical voltage", "${uiState.timerData.batteryWarningVoltage}")
+        RowWithCheckBox("Power-off delay after DT enabled", value = uiState.timerData.isDtPowerDownDelayEnabled,
+            onValueChange = { isChecked ->
+                onUpdateConfigByte(isChecked, 64)
+            })
         RowWithField("Power-off delay after DT (seconds)", "${uiState.timerData.dtPowerDownDelay}")
         RowWithCheckBox("RDT enabled", value = uiState.timerData.isRdtEnabled,
             onValueChange = { isChecked ->
-                // Call the function passed from the ViewModel.
-                // The bit value for RDT is 4.
                 onUpdateConfigByte(isChecked, 4)
             })
         RowWithCheckBox("Beep on tow", value = uiState.timerData.isBeepOnTowEnabled,
             onValueChange = { isChecked ->
-                // Call the function passed from the ViewModel.
-                // The bit value for RDT is 4.
                 onUpdateConfigByte(isChecked, 32)
             })
 
@@ -85,21 +85,15 @@ fun SettingsScreen(
             "Tow",
             value = uiState.timerData.isSwitch1Enabled,
             onValueChange = { isChecked ->
-                // Call the function passed from the ViewModel.
-                // The bit value for RDT is 4.
                 onUpdateConfigByte(isChecked, 1)
             })
         RowWithCheckBox("Latch", value = uiState.timerData.isSwitch2Enabled,
             onValueChange = { isChecked ->
-                // Call the function passed from the ViewModel.
-                // The bit value for RDT is 4.
                 onUpdateConfigByte(isChecked, 2)
             })
         RowWithText("Hook type")
         RowWithCheckBox("Re-latch (not checked is conventional)", value = uiState.timerData.isReLatchEnabled,
             onValueChange = { isChecked ->
-                // Call the function passed from the ViewModel.
-                // The bit value for RDT is 4.
                 onUpdateConfigByte(isChecked, 128)
             })
         RowWithField("Re-latch critical time (seconds)", "${uiState.timerData.maxTimeForSkippingBunt.toDouble() / 10.0}")
@@ -236,12 +230,6 @@ fun SettingsScreenPreview() {
     val uiState = UiState(
         timerData = TimerData(
             modelName = "Test Model",
-            modelId = 1,
-            modelSet = 2,
-            usedDt = 10,
-            batteryVoltage = 37f,
-            batteryLowestVoltage = 33f,
-            currentTemperature = 22.5f,
         )
     )
     SettingsScreen(
@@ -249,4 +237,3 @@ fun SettingsScreenPreview() {
         onUpdateConfigByte = { _, _ -> },
     )
 }
-
