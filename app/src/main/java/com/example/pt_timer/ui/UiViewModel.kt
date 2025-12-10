@@ -104,6 +104,15 @@ class UiViewModel(
 
     }
 
+    // Generic function to update the TimerData object in the state
+    // Can be well used to edit e.g. single value
+    fun updateTimerData(updateAction: TimerData.() -> TimerData) {
+        _uiState.update { currentState ->
+            val updatedTimerData = currentState.timerData.updateAction()
+            currentState.copy(timerData = updatedTimerData)
+        }
+    }
+
     // Function to update the list of BT devices in the state
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun refreshPairedDevices() {

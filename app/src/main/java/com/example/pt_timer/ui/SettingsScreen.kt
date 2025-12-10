@@ -50,6 +50,7 @@ fun modelTypeAsString(modelType: Int): String {
 fun SettingsScreen(
     uiState: UiState,
     onUpdateConfigByte: (Boolean, Int) -> Unit,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -57,13 +58,31 @@ fun SettingsScreen(
             .padding(dimensionResource(R.dimen.padding_small)),
     ) {
         RowWithText("Model type ${modelTypeAsString(uiState.timerData.modelType)}")
-        RowWithField("Number of data lines", "${uiState.timerData.numberOfDataRows}")
-        RowWithField("Critical voltage", "${uiState.timerData.batteryWarningVoltage}")
+        RowWithField(
+            "Number of data lines",
+            "${uiState.timerData.numberOfDataRows}",
+            onDoneAction = { newValue ->
+                onUpdateTimerData { copy(numberOfDataRows = newValue.toIntOrNull() ?: 0) }
+            }
+        )
+        RowWithField(
+            "Critical voltage",
+            "${uiState.timerData.batteryWarningVoltage}",
+            onDoneAction = { newValue ->
+                onUpdateTimerData { copy(batteryWarningVoltage = newValue.toDoubleOrNull() ?: 0.0) }
+            }
+        )
         RowWithCheckBox("Power-off delay after DT enabled", value = uiState.timerData.isDtPowerDownDelayEnabled,
             onValueChange = { isChecked ->
                 onUpdateConfigByte(isChecked, 64)
             })
-        RowWithField("Power-off delay after DT (seconds)", "${uiState.timerData.dtPowerDownDelay}")
+        RowWithField(
+            "Power-off delay after DT (seconds)",
+            "${uiState.timerData.dtPowerDownDelay}",
+            onDoneAction = { newValue ->
+                onUpdateTimerData { copy(dtPowerDownDelay = newValue.toIntOrNull() ?: 0) }
+            }
+        )
         RowWithCheckBox("RDT enabled", value = uiState.timerData.isRdtEnabled,
             onValueChange = { isChecked ->
                 onUpdateConfigByte(isChecked, 4)
@@ -96,7 +115,13 @@ fun SettingsScreen(
             onValueChange = { isChecked ->
                 onUpdateConfigByte(isChecked, 128)
             })
-        RowWithField("Re-latch critical time (seconds)", "${uiState.timerData.maxTimeForSkippingBunt.toDouble() / 10.0}")
+        RowWithField(
+            "Re-latch critical time (seconds)",
+            "${uiState.timerData.maxTimeForSkippingBunt.toDouble() / 10.0}",
+            onDoneAction = { newValue ->
+                onUpdateTimerData { copy(maxTimeForSkippingBunt = ((newValue.toDoubleOrNull() ?: 0.0) * 10).toInt()) }
+            }
+        )
 
         // --- Advanced settings ---
         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
@@ -108,7 +133,13 @@ fun SettingsScreen(
         RowWithText("Version ${uiState.timerData.timerVersion}")
         RowWithText("Maximum data lines ${uiState.timerData.maxDataRows}")
         RowWithText("Name label index ${uiState.timerData.firstIndexForDataSetName}")
-        RowWithField("Wake up count", "${uiState.timerData.startUpCycleCount}")
+        RowWithField(
+            "Wake up count",
+            "${uiState.timerData.startUpCycleCount}",
+            onDoneAction = { newValue ->
+                onUpdateTimerData { copy(startUpCycleCount = newValue.toIntOrNull() ?: 0) }
+            }
+        )
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -117,9 +148,24 @@ fun SettingsScreen(
                 text = "Clock speed",
                 style = typography.bodyMedium
             )
-            SettingsField(value = "${uiState.timerData.timerCalibrationInMilliseconds}", onValueChange = {}, onDoneAction = {})
-            SettingsField(value = "${uiState.timerData.timerCalibrationInMicroseconds1}", onValueChange = {}, onDoneAction = {})
-            SettingsField(value = "${uiState.timerData.timerCalibrationInMicroseconds2}", onValueChange = {}, onDoneAction = {})
+            SettingsField(
+                value = "${uiState.timerData.timerCalibrationInMilliseconds}",
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(timerCalibrationInMilliseconds = newValue.toIntOrNull() ?: 0) }
+                }
+            )
+            SettingsField(
+                value = "${uiState.timerData.timerCalibrationInMicroseconds1}",
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(timerCalibrationInMicroseconds1 = newValue.toIntOrNull() ?: 0) }
+                }
+            )
+            SettingsField(
+                value = "${uiState.timerData.timerCalibrationInMicroseconds2}",
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(timerCalibrationInMicroseconds2 = newValue.toIntOrNull() ?: 0) }
+                }
+            )
         }
     }
 }
@@ -140,7 +186,8 @@ fun RowWithText(text: String) {
 @Composable
 fun RowWithField(
     text: String,
-    value: String
+    value: String,
+    onDoneAction: (String) -> Unit
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -150,7 +197,7 @@ fun RowWithField(
             text = text,
             style = typography.bodyMedium
         )
-        SettingsField(value = value, onValueChange = {}, onDoneAction = {})
+        SettingsField(value = value, onDoneAction = onDoneAction)
     }
 }
 
@@ -181,9 +228,8 @@ fun RowWithCheckBox(
 @Composable
 fun SettingsField(
     value: String,
-    onValueChange: (String) -> Unit,
-    onDoneAction: () -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text,
+    onDoneAction: (String) -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Number,
 ) {
     var text by remember { mutableStateOf(value) }
 
@@ -201,12 +247,13 @@ fun SettingsField(
             .width(68.dp)
             .onFocusChanged { focusState ->
                 if (!focusState.isFocused) {
-                    onDoneAction()
+                    onDoneAction(text)
                 }
             },
         value = text,
         onValueChange = { newText ->
-            onValueChange(newText)   // send update up (if needed)
+            // Only update the local state while typing
+            text = newText
         },
         singleLine = true,
         textStyle = typography.bodySmall,
@@ -216,7 +263,7 @@ fun SettingsField(
         ),
         keyboardActions = KeyboardActions(
             onDone = {
-                onDoneAction()
+                onDoneAction(text)
                 focusManager.clearFocus()
             }
         )
@@ -235,5 +282,6 @@ fun SettingsScreenPreview() {
     SettingsScreen(
         uiState = uiState,
         onUpdateConfigByte = { _, _ -> },
+        onUpdateTimerData = { _ -> }
     )
 }

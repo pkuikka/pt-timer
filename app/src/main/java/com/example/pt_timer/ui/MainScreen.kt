@@ -46,6 +46,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -72,6 +74,7 @@ import com.example.pt_timer.data.TIMER_TYPE_F1A
 import com.example.pt_timer.data.TIMER_TYPE_F1B
 import com.example.pt_timer.data.TIMER_TYPE_F1Q
 import com.example.pt_timer.data.TIMER_TYPE_P30
+import com.example.pt_timer.data.TimerData
 
 
 @SuppressLint("MissingPermission")
@@ -169,6 +172,9 @@ fun MainScreen(
         onUpdateConfigurationByte = { isSet, bitValue ->
             mainScreenViewModel.updateCheckBoxesWithByte(isSet, bitValue)
         },
+        onUpdateTimerData = { updateAction ->
+            mainScreenViewModel.updateTimerData(updateAction)
+        },
         onServoLabelNameChanged = { index, newLabelName ->
             mainScreenViewModel.onServoLabelNameChanged(
                 index,
@@ -211,6 +217,7 @@ fun MainScreenContent(
     onDeleteRowClick: () -> Unit,
     onNewTimerDataClick: (Int) -> Unit,
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
     onServoMidPositionChanged: (Int, String) -> Unit,
@@ -359,6 +366,7 @@ fun MainScreenContent(
                 onModelSetChanged,
                 onGridItemChanged,
                 onUpdateConfigurationByte,
+                onUpdateTimerData,
                 onUpdateServoSettingsByte,
                 onServoLabelNameChanged,
                 onServoMidPositionChanged,
@@ -377,6 +385,7 @@ fun TabLayout(
     onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
     onServoMidPosition: (Int, String) -> Unit,
@@ -391,13 +400,13 @@ fun TabLayout(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_small))
     ) {
 
-        var state by remember { mutableStateOf(0) }
+        var state by remember { mutableIntStateOf(0) }
         val distanceThreshold = uiState.displaySwipeDistance
         val velocityThreshold = uiState.displaySwipeVelocity
         val titles = listOf("Timer setup", "Servo setup", "Settings")
 
         val velocityTracker = remember { VelocityTracker() }
-        var dragAmountTotal by remember { mutableStateOf(0f) }
+        var dragAmountTotal by remember { mutableFloatStateOf(0f) }
 
         Box(
             modifier = Modifier
@@ -490,6 +499,7 @@ fun TabLayout(
                         2 -> SettingsTabContent(
                             uiState,
                             onUpdateConfigurationByte,
+                            onUpdateTimerData
                         )
                     }
                 }
@@ -535,10 +545,12 @@ fun ServoSetupTabContent(
 fun SettingsTabContent(
     uiState: UiState,
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
 ) {
     SettingsScreen(
         uiState,
-        onUpdateConfigurationByte
+        onUpdateConfigurationByte,
+        onUpdateTimerData
     )
 }
 
@@ -738,6 +750,7 @@ fun MainScreenPreview() {
         onNewTimerDataClick = {},
         onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
         onUpdateConfigurationByte = { _, _ -> },
+        onUpdateTimerData = { _ -> },
         onUpdateServoSettingsByte = { newSettings, position -> println("Servo settings byte updated: $newSettings at position $position") },
         onServoLabelNameChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
         onServoMidPositionChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },

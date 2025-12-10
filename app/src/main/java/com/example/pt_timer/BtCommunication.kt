@@ -46,7 +46,11 @@ class BtCommunication(private val context: Context) {
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun getPairedDevices(): List<String> {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             return emptyList()
         }
         return bluetoothAdapter?.bondedDevices?.map { it.name } ?: emptyList()
@@ -55,7 +59,7 @@ class BtCommunication(private val context: Context) {
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun connectDevice(selectedDevice: String, onConnectionResult: (Boolean) -> Unit) {
         if (bluetoothAdapter == null) {
-            toastAndLog("Device doesn't support Bluetooth", logLevel="Log.e")
+            toastAndLog("Device doesn't support Bluetooth", logLevel = "Log.e")
             onConnectionResult(false)
             return
         }
@@ -69,7 +73,7 @@ class BtCommunication(private val context: Context) {
                 ) {
                     context.startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
                 } else {
-                    toastAndLog("BLUETOOTH_CONNECT permission not granted.", logLevel="Log.w")
+                    toastAndLog("BLUETOOTH_CONNECT permission not granted.", logLevel = "Log.w")
                     onConnectionResult(false)
                     return
                 }
@@ -82,13 +86,13 @@ class BtCommunication(private val context: Context) {
                 Manifest.permission.BLUETOOTH_CONNECT
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            toastAndLog("BLUETOOTH_CONNECT permission not granted.", logLevel="Log.w")
+            toastAndLog("BLUETOOTH_CONNECT permission not granted.", logLevel = "Log.w")
             onConnectionResult(false)
             return
         }
 
         if (selectedDevice == "") {
-            toastAndLog("No BlueTooth device selected.", logLevel="Log.w")
+            toastAndLog("No BlueTooth device selected.", logLevel = "Log.w")
             onConnectionResult(false)
             return
         }
@@ -125,14 +129,17 @@ class BtCommunication(private val context: Context) {
         return
     }
 
-    fun timerCommunication(packetToSend: ByteArray? = null,
-                           writeDelay: Long = 100,
-                           onDataReceived: (ByteArray) -> Unit,
-                           onConfirmationRequired: ((message: String, onConfirm: () -> Unit, onCancel: () -> Unit) -> Unit)? = null) {
+    fun timerCommunication(
+        packetToSend: ByteArray? = null,
+        writeDelay: Long = 100,
+        onDataReceived: (ByteArray) -> Unit,
+        onConfirmationRequired: ((message: String, onConfirm: () -> Unit, onCancel: () -> Unit) -> Unit)? = null
+    ) {
         var stopWorker = false
         var retryCount = 0
 
-        fun getUnsignedByte(index: Int, convertBytes: ByteArray): Int = convertBytes[index].toInt() and 0xFF
+        fun getUnsignedByte(index: Int, convertBytes: ByteArray): Int =
+            convertBytes[index].toInt() and 0xFF
 
         if (btSerialInputStream == null || btSerialOutputStream == null) {
             Handler(Looper.getMainLooper()).post {
@@ -180,14 +187,14 @@ class BtCommunication(private val context: Context) {
                             // Write new data if packetToSend is not null
                             if (packetToSend != null) {
                                 val currentPacket = packetBytes.drop(1).toByteArray()
-                                val currentModelType = getUnsignedByte (1, currentPacket)
-                                val writeModelType = getUnsignedByte (1, packetToSend)
-                                val currentModelId = getUnsignedByte (2, currentPacket)
-                                val writeModelId = getUnsignedByte (2, packetToSend)
-                                val currentModelSet = getUnsignedByte (3, currentPacket)
-                                val writeModelSet = getUnsignedByte (3, packetToSend)
+                                val currentModelType = getUnsignedByte(1, currentPacket)
+                                val writeModelType = getUnsignedByte(1, packetToSend)
+                                val currentModelId = getUnsignedByte(2, currentPacket)
+                                val writeModelId = getUnsignedByte(2, packetToSend)
+                                val currentModelSet = getUnsignedByte(3, currentPacket)
+                                val writeModelSet = getUnsignedByte(3, packetToSend)
 
-                                if (currentModelId == writeModelId  && currentModelType == writeModelType && currentModelSet == writeModelSet) {
+                                if (currentModelId == writeModelId && currentModelType == writeModelType && currentModelSet == writeModelSet) {
                                     Log.i(
                                         TAG,
                                         "All ok: Model type $writeModelType and model ID $writeModelId and model set $writeModelSet"
@@ -206,7 +213,10 @@ class BtCommunication(private val context: Context) {
                                             warningMessage,
                                             {
                                                 scope.launch {
-                                                    writeData(packetBytes = packetToSend, writeDelay = writeDelay)
+                                                    writeData(
+                                                        packetBytes = packetToSend,
+                                                        writeDelay = writeDelay
+                                                    )
                                                     cancel()
                                                 }
                                             },
@@ -221,6 +231,7 @@ class BtCommunication(private val context: Context) {
                                 }
                             }
                         }
+
                         else -> {
                             Log.i(TAG, "Bytes available: $bytesAvailable")
                         }
@@ -304,8 +315,9 @@ class BtCommunication(private val context: Context) {
         } else {
             writeDataString = ""
             Handler(Looper.getMainLooper()).post {
-                toastAndLog("Write verification failed! Only bytes available: " +
-                        "$bytesAvailableAfterWrite", logLevel = "Log.e"
+                toastAndLog(
+                    "Write verification failed! Only bytes available: " +
+                            "$bytesAvailableAfterWrite", logLevel = "Log.e"
                 )
             }
         }
@@ -313,16 +325,18 @@ class BtCommunication(private val context: Context) {
     }
 
 
-    private fun toastAndLog (message: String, logLevel: String = "Log.i") {
+    private fun toastAndLog(message: String, logLevel: String = "Log.i") {
         when (logLevel) {
             "Log.e" -> {
                 Log.e(TAG, message)
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
+
             "Log.w" -> {
                 Log.w(TAG, message)
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             }
+
             else -> {
                 Log.i(TAG, message)
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
