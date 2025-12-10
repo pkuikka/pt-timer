@@ -276,7 +276,7 @@ class BtCommunication(private val context: Context) {
             }
             btSerialOutputStream!!.write(value)
             btSerialOutputStream!!.flush()
-                sleep(writeDelay)
+            sleep(writeDelay)
         }
 
         // Verifying data (wait max 10s)
