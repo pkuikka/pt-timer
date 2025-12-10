@@ -26,16 +26,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.pt_timer.data.GlobalData
 import com.example.pt_timer.data.TimerData
 
 @Composable
 fun ServoSetupScreen(
     uiState: UiState,
-    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPosition: (Int, String) -> Unit,
-    onServoRange: (Int, String) -> Unit,
+    onServoMidPositionChanged: (Int, String) -> Unit,
+    onServoRangeChanged: (Int, String) -> Unit,
+    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -72,23 +71,128 @@ fun ServoSetupScreen(
                 )
             }
         }
-        GlobalData.createServoDataList(uiState)
 
         // -------- Servo1 to 4 settings --------
         (0 until 4).forEach { i ->
+            var name = ""
+            var inUse = false
+            var inUseBit = 0
+            var reversed = false
+            var reversedBit = 0
+            val midPos = uiState.timerData.servoMidPosition.getOrNull(i).toString()
+            val range = uiState.timerData.servoRange.getOrNull(i).toString()
+            when (i + 1) {
+                1 -> {
+                    name = uiState.timerData.servo1Label
+                    inUse = uiState.timerData.isServo1NotInUse
+                    inUseBit = 16
+                    reversed = uiState.timerData.isServo1Reversed
+                    reversedBit = 1
+                }
+
+                2 -> {
+                    name = uiState.timerData.servo2Label
+                    inUse = uiState.timerData.isServo2NotInUse
+                    inUseBit = 32
+                    reversed = uiState.timerData.isServo2Reversed
+                    reversedBit = 2
+                }
+
+                3 -> {
+                    name = uiState.timerData.servo3Label
+                    inUse = uiState.timerData.isServo3NotInUse
+                    inUseBit = 64
+                    reversed = uiState.timerData.isServo3Reversed
+                    reversedBit = 4
+                }
+
+                4 -> {
+                    name = uiState.timerData.servo4Label
+                    inUse = uiState.timerData.isServo4NotInUse
+                    inUseBit = 128
+                    reversed = uiState.timerData.isServo4Reversed
+                    reversedBit = 8
+                }
+
+                else -> {}
+            }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ServoDataRow(
                     index = i,
+                    name = name,
+                    midPos = midPos,
+                    range = range,
                     onServoLabelNameChanged,
-                    onServoMidPosition,
-                    onServoRange,
-                    onUpdateServoSettingsByte
+                    onServoMidPositionChanged,
+                    onServoRangeChanged,
+                    inUseValue = inUse,
+                    inUseValueChange = { isChecked ->
+                        onUpdateServoSettingsByte(isChecked, inUseBit)
+                    },
+                    reversedValue = reversed,
+                    reversedValueChange = { isChecked ->
+                        onUpdateServoSettingsByte(isChecked, reversedBit)
+                    }
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ServoDataRow(
+    index: (Int),
+    name: (String),
+    midPos: (String),
+    range: (String),
+    onServoLabelNameChanged: (Int, String) -> Unit,
+    onServoMidPositionChanged: (Int, String) -> Unit,
+    onServoRangeChanged: (Int, String) -> Unit,
+    inUseValue: Boolean,
+    inUseValueChange: (Boolean) -> Unit,
+    reversedValue: Boolean,
+    reversedValueChange: (Boolean) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        ServoDataField(
+            value = name,
+            onValueChange = { newName -> onServoLabelNameChanged(index, newName) },
+            onDoneAction = { onServoLabelNameChanged(index, name) },
+            keyboardType = KeyboardType.Text,
+        )
+
+        ServoDataField(
+            value = midPos,
+            onValueChange = { newValue -> onServoMidPositionChanged(index, newValue) },
+            onDoneAction = { onServoMidPositionChanged(index, midPos) },
+            keyboardType = KeyboardType.Number,
+        )
+
+        ServoDataField(
+            value = range,
+            onValueChange = { newValue -> onServoRangeChanged(index, newValue) },
+            onDoneAction = { onServoRangeChanged(index, range) },
+            keyboardType = KeyboardType.Number,
+        )
+
+        Checkbox(
+            checked = !inUseValue, // Invert the value as it is *NotInUse
+            onCheckedChange = { isChecked ->
+                inUseValueChange(!isChecked)  // Need to invert here too
+            }
+        )
+        Checkbox(
+            checked = reversedValue,
+            onCheckedChange = {
+                reversedValueChange(it)
+            }
+        )
     }
 }
 
@@ -136,65 +240,6 @@ fun ServoDataField(
     )
 }
 
-
-@Composable
-fun ServoDataRow(
-    index: (Int),
-    onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPosition: (Int, String) -> Unit,
-    onServoRange: (Int, String) -> Unit,
-    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    ) {
-
-    var text by remember { mutableStateOf(GlobalData.getDataRows()[index].name) }
-    var textMidPos by remember { mutableStateOf(GlobalData.getDataRows()[index].midPos.toString()) }
-    var textRange by remember { mutableStateOf(GlobalData.getDataRows()[index].range.toString()) }
-
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        ServoDataField(
-            value = text,
-            onValueChange = { text = it },
-            onDoneAction = { onServoLabelNameChanged(1 + index, text) } ,
-            keyboardType = KeyboardType.Text,
-        )
-
-        ServoDataField(
-            value = textMidPos,
-            onValueChange = { textMidPos = it },
-            onDoneAction = { onServoMidPosition(0 + index, textMidPos) },
-            keyboardType = KeyboardType.Number,
-        )
-
-        ServoDataField(
-            value = textRange,
-            onValueChange = { textRange = it },
-            onDoneAction = { onServoRange(0 + index, textRange) },
-            keyboardType = KeyboardType.Number,
-        )
-
-        val inUse = remember { mutableStateOf(GlobalData.getDataRows()[index].inUse) }
-        Checkbox(
-            checked = inUse.value,
-            onCheckedChange = {
-                onUpdateServoSettingsByte(!it, index + 4)
-                inUse.value = it
-            }
-        )
-
-        val reversed = remember { mutableStateOf(GlobalData.getDataRows()[index].reverse) }
-        Checkbox(
-            checked = reversed.value,
-            onCheckedChange = {
-                onUpdateServoSettingsByte(it, index)
-                reversed.value = it
-            }
-        )
-    }
-}
-
 @Preview(showBackground = true)
 @Composable
 fun ServoSetupScreenPreview() {
@@ -202,23 +247,16 @@ fun ServoSetupScreenPreview() {
     val uiState = UiState(
         timerData = TimerData(
             modelName = "Test Model",
-            modelId = 1,
-            modelSet = 2,
-            usedDt = 10,
-            batteryVoltage = 37f,
-            batteryLowestVoltage = 33f,
-            currentTemperature = 22.5f,
         )
     )
     ServoSetupScreen(
         uiState = uiState,
         onUpdateServoSettingsByte = { newSettings, position ->
-            // Example logic for updating the servo settings byte
             println("Servo settings byte updated: $newSettings at position $position")
         },
         onServoLabelNameChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoMidPosition = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoRange = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
+        onServoMidPositionChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
+        onServoRangeChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
 }
 

@@ -100,13 +100,25 @@ data class TimerData(
     val currentTemperature: Float = 0f,
     val usedDt: Int = 0, // Counts together configured DT time + DIP switches
 ) {
+
+    // --- Configuration byte Booleans ---
     val isSwitch1Enabled: Boolean get() = (configurationByte.toInt() and 1) != 0
     val isSwitch2Enabled: Boolean get() = (configurationByte.toInt() and 2) != 0
     val isRdtEnabled: Boolean get() = (configurationByte.toInt() and 4) != 0
     val isBeepOnTowEnabled: Boolean get() = (configurationByte.toInt() and 32) != 0
-
-    //val isExternalPowerEnabled: Boolean get() = (configurationByte.toInt() and 64) != 0
+    val isDtPowerDownDelayEnabled: Boolean get() = (configurationByte.toInt() and 64) != 0
     val isReLatchEnabled: Boolean get() = (configurationByte.toInt() and 128) != 0
+
+    // --- Servo settings byte Booleans ---
+    val isServo1Reversed: Boolean get() = (servoSettingsByte.toInt() and 1) != 0
+    val isServo2Reversed: Boolean get() = (servoSettingsByte.toInt() and 2) != 0
+    val isServo3Reversed: Boolean get() = (servoSettingsByte.toInt() and 4) != 0
+    val isServo4Reversed: Boolean get() = (servoSettingsByte.toInt() and 8) != 0
+    val isServo1NotInUse: Boolean get() = (servoSettingsByte.toInt() and 16) != 0
+    val isServo2NotInUse: Boolean get() = (servoSettingsByte.toInt() and 32) != 0
+    val isServo3NotInUse: Boolean get() = (servoSettingsByte.toInt() and 64) != 0
+    val isServo4NotInUse: Boolean get() = (servoSettingsByte.toInt() and 128) != 0
+
 
     companion object {
         /**

@@ -167,7 +167,7 @@ fun MainScreen(
             )
         },
         onUpdateConfigurationByte = { isSet, bitValue ->
-            mainScreenViewModel.updateConfigurationByte(isSet, bitValue)
+            mainScreenViewModel.updateCheckBoxesWithByte(isSet, bitValue)
         },
         onServoLabelNameChanged = { index, newLabelName ->
             mainScreenViewModel.onServoLabelNameChanged(
@@ -175,14 +175,18 @@ fun MainScreen(
                 newLabelName
             )
         },
-        onServoMidPosition = { index, newServoMidPosition ->
+        onServoMidPositionChanged = { index, newServoMidPosition ->
             mainScreenViewModel.servoMidPosition(index, newServoMidPosition)
         },
-        onServoRange = { index, newServoRange ->
+        onServoRangeChanged = { index, newServoRange ->
             mainScreenViewModel.onServoRangeChanged(index, newServoRange)
         },
         onUpdateServoSettingsByte = { isSet, bitValue ->
-            mainScreenViewModel.onUpdateServoSettingsByte(isSet, bitValue)
+            mainScreenViewModel.updateCheckBoxesWithByte(
+                isSet,
+                bitValue,
+                updateServoSettingsByte = true
+            )
         }
     )
 }
@@ -209,8 +213,8 @@ fun MainScreenContent(
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPosition: (Int, String) -> Unit,
-    onServoRange: (Int, String) -> Unit,
+    onServoMidPositionChanged: (Int, String) -> Unit,
+    onServoRangeChanged: (Int, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -357,8 +361,8 @@ fun MainScreenContent(
                 onUpdateConfigurationByte,
                 onUpdateServoSettingsByte,
                 onServoLabelNameChanged,
-                onServoMidPosition,
-                onServoRange
+                onServoMidPositionChanged,
+                onServoRangeChanged
             )
         }
     }
@@ -477,10 +481,10 @@ fun TabLayout(
 
                         1 -> ServoSetupTabContent(
                             uiState,
-                            onUpdateServoSettingsByte,
                             onServoLabelNameChanged,
                             onServoMidPosition,
-                            onServoRange
+                            onServoRange,
+                            onUpdateServoSettingsByte
                         )
 
                         2 -> SettingsTabContent(
@@ -513,17 +517,17 @@ fun TimerSetupTabContent(
 @Composable
 fun ServoSetupTabContent(
     uiState: UiState,
-    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPosition: (Int, String) -> Unit,
-    onServoRange: (Int, String) -> Unit
+    onServoMidPositionChanged: (Int, String) -> Unit,
+    onServoRangeChanged: (Int, String) -> Unit,
+    onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
 ) {
     ServoSetupScreen(
         uiState,
-        onUpdateServoSettingsByte,
         onServoLabelNameChanged,
-        onServoMidPosition,
-        onServoRange
+        onServoMidPositionChanged,
+        onServoRangeChanged,
+        onUpdateServoSettingsByte
     )
 }
 
@@ -736,8 +740,8 @@ fun MainScreenPreview() {
         onUpdateConfigurationByte = { _, _ -> },
         onUpdateServoSettingsByte = { newSettings, position -> println("Servo settings byte updated: $newSettings at position $position") },
         onServoLabelNameChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoMidPosition = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoRange = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
+        onServoMidPositionChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
+        onServoRangeChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
 }
 
