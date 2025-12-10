@@ -18,7 +18,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,98 +39,92 @@ fun UserSettingsScreen(
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
-
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("User Settings") },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateUp) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("User Settings") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateUp) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
-                )
-            }
-        ) { innerPadding ->
-            Column(
-                modifier = modifier
-                    .padding(innerPadding)
-                    .padding(mediumPadding)
-            ) {
-                // Example of multiple rows
-                Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "PT-Timer controller version: ${BuildConfig.VERSION_NAME}",
-                        style = MaterialTheme.typography.bodyLarge // Correct style for Material 3
-                    )
                 }
-
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Communication settings",
-                        style = MaterialTheme.typography.bodyLarge // Correct style for Material 3
-                    )
-                }
-                Row(Modifier.fillMaxWidth().height(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Write Delay: ${writeCommunicationDelay.toLong()} ms",
-                        style = MaterialTheme.typography.bodyLarge // Correct style for Material 3
-                    )
-                }
-
-                Slider(
-                    value = writeCommunicationDelay,
-                    onValueChange = onDelayChanged,
-                    valueRange = 50f..500f,
-                    steps = 8
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Display settings",
-                        style = MaterialTheme.typography.bodyLarge // Correct style for Material 3
-                    )
-                }
-
-                Row(Modifier.fillMaxWidth().height(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Display Swipe Velocity: ${displaySwipeVelocity.toLong()} units/s",
-                        style = MaterialTheme.typography.bodyLarge // Correct style for Material 3
-                    )
-                }
-
-                Slider(
-                    value = displaySwipeVelocity,
-                    onValueChange = onSwipeVelocityChanged,
-                    valueRange = 50f..300f,
-                    steps = 10
-                )
-
-                //Spacer(modifier = Modifier.height(16.dp))
-
-                Row(Modifier.fillMaxWidth().height(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Display Swipe Distance: ${displaySwipeDistance.toLong()} units",
-                        style = MaterialTheme.typography.bodyLarge // Correct style for Material 3
-                    )
-                }
-
-                Slider(
-                    value = displaySwipeDistance,
-                    onValueChange = onSwipeDistanceChange,
-                    valueRange = 100f..900f,
-                    steps = 10
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            )
         }
+    ) { innerPadding ->
+        Column(
+            modifier = modifier
+                .padding(innerPadding)
+                .padding(mediumPadding)
+        ) {
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    text = "PT-Timer controller version: ${BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Communication settings",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Write Delay: ${writeCommunicationDelay.toLong()} ms",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Slider(
+                value = writeCommunicationDelay,
+                onValueChange = onDelayChanged,
+                valueRange = 50f..500f,
+                steps = 8
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Display settings",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Display Swipe Velocity: ${displaySwipeVelocity.toLong()} units/s",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Slider(
+                value = displaySwipeVelocity,
+                onValueChange = onSwipeVelocityChanged,
+                valueRange = 50f..300f,
+                steps = 10
+            )
+
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Display Swipe Distance: ${displaySwipeDistance.toLong()} units",
+                    style = MaterialTheme.typography.bodyMedium // Correct style for Material 3
+                )
+            }
+
+            Slider(
+                value = displaySwipeDistance,
+                onValueChange = onSwipeDistanceChange,
+                valueRange = 100f..900f,
+                steps = 10
+            )
+        }
+    }
 }
 
 @Preview(showBackground = true)
