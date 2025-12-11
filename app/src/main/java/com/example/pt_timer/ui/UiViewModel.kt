@@ -181,32 +181,6 @@ class UiViewModel(
         }
     }
 
-    fun onModelNameChanged(newName: String) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                timerData = currentState.timerData.copy(modelName = newName)
-            )
-        }
-    }
-
-    fun onModelIdChanged(newId: String) {
-        if (newId.isEmpty()) return
-        _uiState.update { currentState ->
-            currentState.copy(
-                timerData = currentState.timerData.copy(modelId = newId.toIntOrNull() ?: 0)
-            )
-        }
-    }
-
-    fun onModelSetChanged(newSet: String) {
-        if (newSet.isEmpty()) return
-        _uiState.update { currentState ->
-            currentState.copy(
-                timerData = currentState.timerData.copy(modelSet = newSet.toIntOrNull() ?: 0)
-            )
-        }
-    }
-
     fun updateCheckBoxesWithByte(
         isSet: Boolean,
         bitValue: Int,

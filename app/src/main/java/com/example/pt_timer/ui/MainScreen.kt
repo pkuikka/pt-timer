@@ -157,9 +157,6 @@ fun MainScreen(
         onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
         onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
         onUserSettingsClick = onUserSettingsClick,
-        onModelNameChanged = { newName -> mainScreenViewModel.onModelNameChanged(newName) },
-        onModelIdChanged = { newIdString -> mainScreenViewModel.onModelIdChanged(newIdString) },
-        onModelSetChanged = { newSetString -> mainScreenViewModel.onModelSetChanged(newSetString) },
         onAddRowClick = { mainScreenViewModel.addRow() },
         onDeleteRowClick = { mainScreenViewModel.deleteRow() },
         onNewTimerDataClick = { mainScreenViewModel.newTimerData(it) },
@@ -197,9 +194,6 @@ fun MainScreenContent(
     onDeviceSelected: (String) -> Unit,
     onRefreshDevices: () -> Unit,
     onUserSettingsClick: () -> Unit,
-    onModelNameChanged: (String) -> Unit,
-    onModelIdChanged: (String) -> Unit,
-    onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
@@ -346,9 +340,6 @@ fun MainScreenContent(
         ) {
             TabLayout(
                 uiState,
-                onModelNameChanged,
-                onModelIdChanged,
-                onModelSetChanged,
                 onGridItemChanged,
                 onUpdateConfigurationByte,
                 onUpdateTimerData,
@@ -362,9 +353,6 @@ fun MainScreenContent(
 @Composable
 fun TabLayout(
     uiState: UiState,
-    onModelNameChanged: (String) -> Unit,
-    onModelIdChanged: (String) -> Unit,
-    onModelSetChanged: (String) -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
@@ -372,7 +360,7 @@ fun TabLayout(
     modifier: Modifier = Modifier
 ) {
 
-    TimerLayout(uiState, onModelNameChanged, onModelIdChanged, onModelSetChanged)
+    TimerLayout(uiState, onUpdateTimerData)
 
     Column(
         modifier = modifier,
@@ -715,9 +703,6 @@ fun MainScreenPreview() {
         onDeviceSelected = {},
         onRefreshDevices = {},
         onUserSettingsClick = {},
-        onModelNameChanged = {},
-        onModelIdChanged = {},
-        onModelSetChanged = {},
         onAddRowClick = {},
         onDeleteRowClick = {},
         onNewTimerDataClick = {},

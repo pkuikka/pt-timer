@@ -76,7 +76,7 @@ fun TimerDataGridLayout(
         for (i in 0 until (uiState.timerData.numberOfDataRows)) {
             // Add the row header for this row
             if (i < rowHeaders.size) {
-                if (i + 1 == uiState.timerData.skipBuntGoToRow) // header row is the +1
+                if ((i + 1 == uiState.timerData.skipBuntGoToRow) && (!uiState.timerData.isReLatchEnabled)) // header row is the +1
                     combinedList.add("-->")
                 else
                     combinedList.add(rowHeaders[i])
@@ -97,7 +97,7 @@ fun TimerDataGridLayout(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = " ", style = typography.bodyMedium)
+            Text(text = " ", style = typography.titleSmall)
             Text(text = "DT at timer ${uiState.timerData.usedDt}", style = typography.titleSmall)
             Text(
                 text = "Current ${uiState.timerData.batteryVoltage / 10}V",

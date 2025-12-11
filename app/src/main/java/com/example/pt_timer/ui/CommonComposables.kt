@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
@@ -35,7 +37,10 @@ import androidx.compose.ui.unit.dp
 fun CommonField(
     value: String,
     onDoneAction: (String) -> Unit,
+    label: String = "",
+    textStyle: TextStyle = MaterialTheme.typography.bodySmall,
     width: (Dp) = 68.dp,
+    height: (Dp) = 48.dp,
     keyboardType: KeyboardType = KeyboardType.Number,
     modifier: Modifier = Modifier
 ) {
@@ -50,13 +55,18 @@ fun CommonField(
     val focusManager = LocalFocusManager.current
 
     OutlinedTextField(
+        label = if (label.isNotEmpty()) {
+            { Text(label) }
+        } else {
+            null
+        },
         value = text,
         onValueChange = { newText ->
             // Only update the local state while the user is typing
             text = newText
         },
         singleLine = true,
-        textStyle = MaterialTheme.typography.bodySmall,
+        textStyle = textStyle,
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = keyboardType,
             imeAction = ImeAction.Done
@@ -70,7 +80,7 @@ fun CommonField(
         // 2. APPLY the modifier, chaining it with your specific modifiers
         modifier = modifier
             .padding(1.dp)
-            .height(48.dp)
+            .height(height)
             .width(width)
             .onFocusChanged { focusState ->
                 // When focus is lost, report the final value.

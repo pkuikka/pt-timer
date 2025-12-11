@@ -34,7 +34,7 @@ fun ServoSetupScreen(
             .padding(dimensionResource(R.dimen.padding_small)),
     ) {
         Row(modifier = modifier.fillMaxWidth()) {
-            Column(modifier = modifier.width(105.dp)) {
+            Column(modifier = modifier.width(100.dp)) {
                 Text(
                     text = " Servo\n name",
                     style = typography.bodyMedium
@@ -176,7 +176,7 @@ fun ServoDataRow(
         CommonField(
             value = name,
             onDoneAction = onDoneActionName,
-            width = 90.dp,
+            width = 85.dp,
             keyboardType = KeyboardType.Text,
         )
 

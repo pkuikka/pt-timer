@@ -4,10 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,9 +16,7 @@ import com.example.pt_timer.data.TimerData
 @Composable
 fun TimerLayout(
     uiState: UiState,
-    onModelNameChanged: (String) -> Unit,
-    onModelIdChanged: (String) -> Unit,
-    onModelSetChanged: (String) -> Unit,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -30,30 +25,39 @@ fun TimerLayout(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            OutlinedTextField(
-                modifier = Modifier.weight(1f),
+            CommonField(
+                label = "Model",
                 value = uiState.timerData.modelName,
-                onValueChange = onModelNameChanged,
-                label = { Text("Model") },
-                singleLine = true
+                onDoneAction = { newValue: String ->
+                    onUpdateTimerData { copy(modelName = newValue) }
+                },
+                textStyle = MaterialTheme.typography.titleMedium,
+                keyboardType = KeyboardType.Text,
+                modifier = Modifier.weight(1f),
+                height = 68.dp
+
             )
 
-            OutlinedTextField(
-                modifier = Modifier.width(68.dp),
+            CommonField(
+                label = "ID",
                 value = uiState.timerData.modelId.toString(),
-                onValueChange = onModelIdChanged,
-                label = { Text("ID") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(modelId = newValue.toIntOrNull() ?: 0) }
+                },
+                textStyle = MaterialTheme.typography.titleMedium,
+                width = 68.dp,
+                height = 68.dp
             )
 
-            OutlinedTextField(
-                modifier = Modifier.width(68.dp),
+            CommonField(
+                label = "Set",
                 value = uiState.timerData.modelSet.toString(),
-                onValueChange = onModelSetChanged,
-                label = { Text("Set") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(modelSet = newValue.toIntOrNull() ?: 0) }
+                },
+                textStyle = MaterialTheme.typography.titleMedium,
+                width = 68.dp,
+                height = 68.dp
             )
         }
     }
@@ -71,8 +75,6 @@ fun TimerLayoutPreview() {
     )
     TimerLayout(
         uiState = uiState,
-        onModelNameChanged = {},
-        onModelIdChanged = {},
-        onModelSetChanged = {}
+        onUpdateTimerData = { _ -> }
     )
 }
