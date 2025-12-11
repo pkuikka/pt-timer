@@ -50,8 +50,8 @@ data class TimerData(
     val startUpCycleCount: Int = 0, // 10 = Timer startup servo cycle count
     val servoMidPosition: List<Int> = List(4) { 127 }, // 11 - 14 = Servo 1 - 4 mid position
     val servoRange: List<Int> = List(4) { 127 }, // 15 - 18 = Servo 1 - 4 range
-    val empty19: Int = 255,  // 19, 20 =  empty / reserve
-    val empty20: Int = 255,
+    val motorRunTime1: Int = 0,  // Motor run time byte #1
+    val motorRunTime2: Int = 0,  // and byte #2
     val servoTemperatureMidPosition: List<Int> = List(4) { 127 }, // 21 - 24 = Servo 1 - 4 temperature correction mid position
     val servoTemperatureRange: List<Int> = List(4) { 127 }, // 25 - 28 = Servo 1 - 4 temperature range
     val empty29: Int = 255,  // 29, 30 =  empty / reserve
@@ -72,7 +72,6 @@ data class TimerData(
     //   ...
     // 209 + 7 = Row 25 time, step lines, and values for servos 1 - 4
     // Map them to more easier column values and force step value always to be 0
-    //val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { 12.4 },
     val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { it.toDouble() },
     val servo1Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 125 },
     val servo2Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 126 },
@@ -174,8 +173,8 @@ data class TimerData(
                 // Lists of Ints/Bytes
                 servoMidPosition = (11..14).map { getUnsignedByte(it) },
                 servoRange = (15..18).map { getUnsignedByte(it) },
-                empty19 = 0, // Ignoring empty/reserved fields
-                empty20 = 0,
+                motorRunTime1 = getUnsignedByte(19),
+                motorRunTime2 = getUnsignedByte(20),
                 servoTemperatureMidPosition = (21..24).map { getUnsignedByte(it) },
                 servoTemperatureRange = (25..28).map { getUnsignedByte(it) },
                 empty29 = 0,
@@ -405,7 +404,8 @@ data class TimerData(
         servoMidPosition.forEachIndexed { i, value -> setByte(11 + i, value) }
         servoRange.forEachIndexed { i, value -> setByte(15 + i, value) }
 
-        // empty19, empty20 are already 0
+        setByte(19, motorRunTime1)
+        setByte(20, motorRunTime2)
 
         servoTemperatureMidPosition.forEachIndexed { i, value -> setByte(21 + i, value) }
         servoTemperatureRange.forEachIndexed { i, value -> setByte(25 + i, value) }

@@ -52,6 +52,8 @@ fun SettingsScreen(
     onUpdateConfigByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
 ) {
+    val modelType = uiState.timerData.modelType
+
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -72,56 +74,112 @@ fun SettingsScreen(
                 onUpdateTimerData { copy(batteryWarningVoltage = newValue.toDoubleOrNull() ?: 0.0) }
             }
         )
-        RowWithCheckBox("Power-off delay after DT enabled", value = uiState.timerData.isDtPowerDownDelayEnabled,
-            onValueChange = { isChecked ->
-                onUpdateConfigByte(isChecked, 64)
-            })
-        RowWithField(
-            "Power-off delay after DT (seconds)",
-            "${uiState.timerData.dtPowerDownDelay}",
-            onDoneAction = { newValue ->
-                onUpdateTimerData { copy(dtPowerDownDelay = newValue.toIntOrNull() ?: 0) }
-            }
-        )
-        RowWithCheckBox("RDT enabled", value = uiState.timerData.isRdtEnabled,
+        RowWithCheckBox(
+            "RDT enabled", value = uiState.timerData.isRdtEnabled,
             onValueChange = { isChecked ->
                 onUpdateConfigByte(isChecked, 4)
             })
-        RowWithCheckBox("Beep on tow", value = uiState.timerData.isBeepOnTowEnabled,
-            onValueChange = { isChecked ->
-                onUpdateConfigByte(isChecked, 32)
-            })
+        if ((modelType == 2) || (modelType == 1) || (modelType == 5)) {
+            RowWithCheckBox(
+                "Power-off delay after DT enabled",
+                value = uiState.timerData.isDtPowerDownDelayEnabled,
+                onValueChange = { isChecked ->
+                    onUpdateConfigByte(isChecked, 64)
+                })
+            RowWithField(
+                "Power-off delay after DT (seconds)",
+                "${uiState.timerData.dtPowerDownDelay}",
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(dtPowerDownDelay = newValue.toIntOrNull() ?: 0) }
+                }
+            )
+        }
 
-        // --- Hook settings ---
-        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-        Text(
-            text = "Hook settings",
-            style = typography.titleSmall
-        )
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
-        RowWithText("Reverse switches")
-        RowWithCheckBox(
-            "Tow",
-            value = uiState.timerData.isSwitch1Enabled,
-            onValueChange = { isChecked ->
-                onUpdateConfigByte(isChecked, 1)
-            })
-        RowWithCheckBox("Latch", value = uiState.timerData.isSwitch2Enabled,
-            onValueChange = { isChecked ->
-                onUpdateConfigByte(isChecked, 2)
-            })
-        RowWithText("Hook type")
-        RowWithCheckBox("Re-latch (not checked is conventional)", value = uiState.timerData.isReLatchEnabled,
-            onValueChange = { isChecked ->
-                onUpdateConfigByte(isChecked, 128)
-            })
-        RowWithField(
-            "Re-latch critical time (seconds)",
-            "${uiState.timerData.maxTimeForSkippingBunt.toDouble() / 10.0}",
-            onDoneAction = { newValue ->
-                onUpdateTimerData { copy(maxTimeForSkippingBunt = ((newValue.toDoubleOrNull() ?: 0.0) * 10).toInt()) }
+        // --- Hook / model type settings ---
+        if (modelType == 2) {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+            Text(
+                text = "Hook settings",
+                style = typography.titleSmall
+            )
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
+        }
+        if ((modelType == 2) || (modelType == 3) || (modelType == 4) || (modelType == 6)) {
+            RowWithCheckBox(
+                if (modelType == 2) {
+                    "Beep on tow"
+                } else {
+                    "Beep after DT"
+                },
+                value = uiState.timerData.isBeepOnTowEnabled,
+                onValueChange = { isChecked ->
+                    onUpdateConfigByte(isChecked, 32)
+                })
+        }
+        if ((modelType == 2) || (modelType == 1) || (modelType == 5)) {
+            RowWithText("Reverse switches")
+            RowWithCheckBox(
+                if (modelType == 2) {
+                    "Tow"
+                } else {
+                    "Start button"
+                },
+                value = uiState.timerData.isSwitch1Enabled,
+                onValueChange = { isChecked ->
+                    onUpdateConfigByte(isChecked, 1)
+                })
+        }
+        if (modelType == 2) {
+            RowWithCheckBox(
+                "Latch", value = uiState.timerData.isSwitch2Enabled,
+                onValueChange = { isChecked ->
+                    onUpdateConfigByte(isChecked, 2)
+                })
+            RowWithText("Hook type")
+            val hookType = uiState.timerData.isReLatchEnabled
+            RowWithCheckBox(
+                "Re-latch (not checked is conventional)",
+                value = uiState.timerData.isReLatchEnabled,
+                onValueChange = { isChecked ->
+                    onUpdateConfigByte(isChecked, 128)
+                })
+            RowWithField(
+                text = if (hookType) {
+                    "Re-latch critical time (seconds)"
+                } else {
+                    "No bunt critical time (seconds)"
+                },
+                value = "${uiState.timerData.maxTimeForSkippingBunt.toDouble() / 10.0}",
+                onDoneAction = { newValue ->
+                    onUpdateTimerData {
+                        copy(
+                            maxTimeForSkippingBunt = ((newValue.toDoubleOrNull()
+                                ?: 0.0) * 10).toInt()
+                        )
+                    }
+                }
+            )
+            if (!hookType) {
+                RowWithField(
+                    "No bunt jump to line #",
+                    "${uiState.timerData.skipBuntGoToRow}",
+                    onDoneAction = { newValue ->
+                        onUpdateTimerData { copy(skipBuntGoToRow = newValue.toIntOrNull() ?: 0) }
+                    }
+                )
+                val buntStatus = when (uiState.timerData.buntStatus) {
+                    1 -> "bunt skipped, longer than max time"
+                    2 -> "bunt skipped, shorter than min time"
+                    else -> "bunt executed"
+                }
+                RowWithText("Last bunt status: $buntStatus")
             }
-        )
+        }
+        if (modelType == 5) {
+            val motorTime =
+                (uiState.timerData.motorRunTime1 * 256 + uiState.timerData.motorRunTime2) / 10.0
+            RowWithText("Last motor run time ${motorTime}s ")
+        }
 
         // --- Advanced settings ---
         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
@@ -151,19 +209,31 @@ fun SettingsScreen(
             SettingsField(
                 value = "${uiState.timerData.timerCalibrationInMilliseconds}",
                 onDoneAction = { newValue ->
-                    onUpdateTimerData { copy(timerCalibrationInMilliseconds = newValue.toIntOrNull() ?: 0) }
+                    onUpdateTimerData {
+                        copy(
+                            timerCalibrationInMilliseconds = newValue.toIntOrNull() ?: 0
+                        )
+                    }
                 }
             )
             SettingsField(
                 value = "${uiState.timerData.timerCalibrationInMicroseconds1}",
                 onDoneAction = { newValue ->
-                    onUpdateTimerData { copy(timerCalibrationInMicroseconds1 = newValue.toIntOrNull() ?: 0) }
+                    onUpdateTimerData {
+                        copy(
+                            timerCalibrationInMicroseconds1 = newValue.toIntOrNull() ?: 0
+                        )
+                    }
                 }
             )
             SettingsField(
                 value = "${uiState.timerData.timerCalibrationInMicroseconds2}",
                 onDoneAction = { newValue ->
-                    onUpdateTimerData { copy(timerCalibrationInMicroseconds2 = newValue.toIntOrNull() ?: 0) }
+                    onUpdateTimerData {
+                        copy(
+                            timerCalibrationInMicroseconds2 = newValue.toIntOrNull() ?: 0
+                        )
+                    }
                 }
             )
         }
