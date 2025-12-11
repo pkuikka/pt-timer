@@ -175,18 +175,6 @@ fun MainScreen(
         onUpdateTimerData = { updateAction ->
             mainScreenViewModel.updateTimerData(updateAction)
         },
-        onServoLabelNameChanged = { index, newLabelName ->
-            mainScreenViewModel.onServoLabelNameChanged(
-                index,
-                newLabelName
-            )
-        },
-        onServoMidPositionChanged = { index, newServoMidPosition ->
-            mainScreenViewModel.servoMidPosition(index, newServoMidPosition)
-        },
-        onServoRangeChanged = { index, newServoRange ->
-            mainScreenViewModel.onServoRangeChanged(index, newServoRange)
-        },
         onUpdateServoSettingsByte = { isSet, bitValue ->
             mainScreenViewModel.updateCheckBoxesWithByte(
                 isSet,
@@ -219,9 +207,6 @@ fun MainScreenContent(
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPositionChanged: (Int, String) -> Unit,
-    onServoRangeChanged: (Int, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -368,9 +353,6 @@ fun MainScreenContent(
                 onUpdateConfigurationByte,
                 onUpdateTimerData,
                 onUpdateServoSettingsByte,
-                onServoLabelNameChanged,
-                onServoMidPositionChanged,
-                onServoRangeChanged
             )
         }
     }
@@ -387,9 +369,6 @@ fun TabLayout(
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPosition: (Int, String) -> Unit,
-    onServoRange: (Int, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -490,9 +469,7 @@ fun TabLayout(
 
                         1 -> ServoSetupTabContent(
                             uiState,
-                            onServoLabelNameChanged,
-                            onServoMidPosition,
-                            onServoRange,
+                            onUpdateTimerData,
                             onUpdateServoSettingsByte
                         )
 
@@ -527,16 +504,12 @@ fun TimerSetupTabContent(
 @Composable
 fun ServoSetupTabContent(
     uiState: UiState,
-    onServoLabelNameChanged: (Int, String) -> Unit,
-    onServoMidPositionChanged: (Int, String) -> Unit,
-    onServoRangeChanged: (Int, String) -> Unit,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
 ) {
     ServoSetupScreen(
         uiState,
-        onServoLabelNameChanged,
-        onServoMidPositionChanged,
-        onServoRangeChanged,
+        onUpdateTimerData,
         onUpdateServoSettingsByte
     )
 }
@@ -752,9 +725,6 @@ fun MainScreenPreview() {
         onUpdateConfigurationByte = { _, _ -> },
         onUpdateTimerData = { _ -> },
         onUpdateServoSettingsByte = { newSettings, position -> println("Servo settings byte updated: $newSettings at position $position") },
-        onServoLabelNameChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoMidPositionChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
-        onServoRangeChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") }
     )
 }
 

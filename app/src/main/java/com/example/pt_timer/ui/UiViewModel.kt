@@ -207,46 +207,6 @@ class UiViewModel(
         }
     }
 
-    fun onServoLabelNameChanged(index: Int, newName: String) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                timerData = when (index + 1) {
-                    1 -> currentState.timerData.copy(servo1Label = newName)
-                    2 -> currentState.timerData.copy(servo2Label = newName)
-                    3 -> currentState.timerData.copy(servo3Label = newName)
-                    4 -> currentState.timerData.copy(servo4Label = newName)
-                    else -> {
-                        // Handle other cases if necessary
-                        Log.w("UiViewModel", "Servo label unhandled index: $index")
-                        currentState.timerData // No change if index is not 1 or 2
-                    }
-                }
-            )
-        }
-    }
-
-    fun onServoRangeChanged(index: Int, newValue: String) {
-        val newIntValue = newValue.toIntOrNull() ?: 0
-        _uiState.update { currentState ->
-            val currentServoRange = currentState.timerData.servoRange
-            val updatedList: List<Int> = currentServoRange.mapIndexed { i, value ->
-                if (i == index) newIntValue else value
-            }
-            currentState.copy(timerData = currentState.timerData.copy(servoRange = updatedList))
-        }
-    }
-
-    fun servoMidPosition(index: Int, newValue: String) {
-        val newIntValue = newValue.toIntOrNull() ?: 0
-        _uiState.update { currentState ->
-            val currentServoMidPos = currentState.timerData.servoMidPosition
-            val updatedList: List<Int> = currentServoMidPos.mapIndexed { i, value ->
-                if (i == index) newIntValue else value
-            }
-            currentState.copy(timerData = currentState.timerData.copy(servoMidPosition = updatedList))
-        }
-    }
-
     fun updateCheckBoxesWithByte(
         isSet: Boolean,
         bitValue: Int,

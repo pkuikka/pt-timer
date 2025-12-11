@@ -6,33 +6,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.pt_timer.R
 import com.example.pt_timer.data.TimerData
+
 
 fun modelTypeAsString(modelType: Int): String {
     when (modelType) {
@@ -206,7 +194,7 @@ fun SettingsScreen(
                 text = "Clock speed",
                 style = typography.bodyMedium
             )
-            SettingsField(
+            CommonField(
                 value = "${uiState.timerData.timerCalibrationInMilliseconds}",
                 onDoneAction = { newValue ->
                     onUpdateTimerData {
@@ -216,7 +204,7 @@ fun SettingsScreen(
                     }
                 }
             )
-            SettingsField(
+            CommonField(
                 value = "${uiState.timerData.timerCalibrationInMicroseconds1}",
                 onDoneAction = { newValue ->
                     onUpdateTimerData {
@@ -226,7 +214,7 @@ fun SettingsScreen(
                     }
                 }
             )
-            SettingsField(
+            CommonField(
                 value = "${uiState.timerData.timerCalibrationInMicroseconds2}",
                 onDoneAction = { newValue ->
                     onUpdateTimerData {
@@ -267,7 +255,7 @@ fun RowWithField(
             text = text,
             style = typography.bodyMedium
         )
-        SettingsField(value = value, onDoneAction = onDoneAction)
+        CommonField(value = value, onDoneAction = onDoneAction)
     }
 }
 
@@ -292,52 +280,6 @@ fun RowWithCheckBox(
             style = typography.bodyMedium
         )
     }
-}
-
-
-@Composable
-fun SettingsField(
-    value: String,
-    onDoneAction: (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Number,
-) {
-    var text by remember { mutableStateOf(value) }
-
-    // Sync local state if parent updates value
-    LaunchedEffect(value) {
-        text = value
-    }
-
-    val focusManager = LocalFocusManager.current
-
-    OutlinedTextField(
-        modifier = Modifier
-            .padding(1.dp)
-            .height(48.dp)
-            .width(68.dp)
-            .onFocusChanged { focusState ->
-                if (!focusState.isFocused) {
-                    onDoneAction(text)
-                }
-            },
-        value = text,
-        onValueChange = { newText ->
-            // Only update the local state while typing
-            text = newText
-        },
-        singleLine = true,
-        textStyle = typography.bodySmall,
-        keyboardOptions = KeyboardOptions.Default.copy(
-            keyboardType = keyboardType,
-            imeAction = ImeAction.Done
-        ),
-        keyboardActions = KeyboardActions(
-            onDone = {
-                onDoneAction(text)
-                focusManager.clearFocus()
-            }
-        )
-    )
 }
 
 @Preview(showBackground = true)
