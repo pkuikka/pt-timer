@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileNotFoundException
@@ -114,12 +115,16 @@ class UiViewModel(
     }
 
     // Function to update the list of BT devices in the state
+
+    //@RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun refreshPairedDevices() {
-        val pairedDevices =
-            btCommunication.getPairedDevices() // Assume this function exists in BtCommunication
-        _uiState.update { currentState ->
+        if(btCommunication.checkBlePermissions()){
+            val pairedDevices =
+                btCommunication.getPairedDevices() // Assume this function exists in BtCommunication
+            _uiState.update { currentState ->
             currentState.copy(btDevices = pairedDevices)
+            }
         }
     }
 
@@ -326,7 +331,7 @@ class UiViewModel(
     }
 
     fun saveJsonToFile() {
-        // We now generate the filename internally from the modelName
+ /*       // We now generate the filename internally from the modelName
         val currentTimerData = _uiState.value.timerData
         val filename = currentTimerData.modelName.replace(Regex("[^a-zA-Z0-9.-]"), "_") + ".json"
 
@@ -352,7 +357,7 @@ class UiViewModel(
                 Toast.makeText(applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG)
                     .show()
             }
-        }
+        }*/
     }
 
     fun deleteFile(filename: String) {

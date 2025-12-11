@@ -9,12 +9,14 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -44,16 +46,86 @@ class BtCommunication(private val context: Context) {
     private var btSerialOutputStream: OutputStream? = null
     private var workerThread: Thread? = null
 
+    private val PERMISSION_REQUEST_CODE = 1001
+
+    // Function to check if all necessary Bluetooth permissions are granted
+    fun checkBlePermissions(): Boolean {
+        val permissionsToRequest = mutableListOf<String>()
+
+        // Android 12+ (API level 31 and above)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH_CONNECT)
+            addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH_SCAN)
+        } else {
+            // For Android versions below Android 12 (Android 10 and 11)
+            //addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH_CONNECT)
+            addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH_ADMIN)
+            addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH)
+            addPermissionIfNeeded(permissionsToRequest, Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        // If no permissions need to be requested, return true
+        if (permissionsToRequest.isEmpty()) {
+            return true
+        }
+
+        // Request the missing permissions
+        if (context is Activity) {
+            ActivityCompat.requestPermissions(
+                context,
+                permissionsToRequest.toTypedArray(),
+                PERMISSION_REQUEST_CODE
+            )
+        }
+        return false
+    }
+
+    private fun addPermissionIfNeeded(permissionsToRequest: MutableList<String>, permission: String) {
+        if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(permission)
+        }
+    }
+
+    fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                // Permissions granted, proceed with Bluetooth operations
+                Log.d("Permissions", "Bluetooth permissions granted")
+            } else {
+                // Permissions denied, inform the user
+                Toast.makeText(context, "Bluetooth permissions are required", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Function to get paired Bluetooth devices
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun getPairedDevices(): List<String> {
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        // Check permissions before proceeding
+        if (!checkBlePermissions()) {
+            // If permissions are not granted, return empty list
             return emptyList()
         }
-        return bluetoothAdapter?.bondedDevices?.map { it.name } ?: emptyList()
+
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+
+        // Check if Bluetooth is supported and enabled
+        if (bluetoothAdapter == null) {
+            Log.w("Bluetooth", "Device does not support Bluetooth")
+            return emptyList()
+        }
+
+        if (!bluetoothAdapter.isEnabled) {
+            // Optionally, you can prompt the user to enable Bluetooth if it's disabled
+            Log.w("Bluetooth", "Bluetooth is disabled, please enable it.")
+            return emptyList()
+        }
+
+        // Fetch paired devices
+        val pairedDevices = bluetoothAdapter.bondedDevices
+        return pairedDevices.map { it.name }
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
@@ -78,17 +150,6 @@ class BtCommunication(private val context: Context) {
                     return
                 }
             }
-        }
-
-        // Check for BLUETOOTH_CONNECT permission before accessing bondedDevices
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            toastAndLog("BLUETOOTH_CONNECT permission not granted.", logLevel = "Log.w")
-            onConnectionResult(false)
-            return
         }
 
         if (selectedDevice == "") {

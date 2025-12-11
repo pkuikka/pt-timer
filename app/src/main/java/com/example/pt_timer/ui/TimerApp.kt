@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pt_timer.ui.navigation.Screen
 import android.Manifest
 
-@RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
+//@RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
 @Composable
 fun TimerApp() {
     val navController = rememberNavController()

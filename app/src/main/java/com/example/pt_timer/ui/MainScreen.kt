@@ -207,16 +207,31 @@ fun MainScreenContent(
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(key1 = true) {
-        if (ContextCompat.checkSelfPermission(
+        onRefreshDevices()
+
+/*        when {
+            ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_CONNECT
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            onRefreshDevices()
-        } else {
-            onRefreshDevices()
-            Toast.makeText(context, "Bluetooth permissions are required", Toast.LENGTH_SHORT).show()
-        }
+            ) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.BLUETOOTH_SCAN
+                    ) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED -> {
+                // All necessary permissions are granted
+                onRefreshDevices()
+            }
+            else -> {
+                // Permissions are not granted, show a message to the user
+                Toast.makeText(context, "Bluetooth permissions are required", Toast.LENGTH_SHORT).show()
+                // Optionally, you could also request permissions here if necessary.
+                // Example: navigate to settings or request permission again
+            }
+        }*/
     }
 
     Scaffold(

@@ -1,13 +1,3 @@
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-
-fun getTimestamp(): String {
-    val sdf = SimpleDateFormat("yyMMddHH", Locale.US)
-    return sdf.format(Date())
-}
-
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -25,23 +15,18 @@ android {
     applicationVariants.all {
         outputs.all {
             val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "pt-timer-0_2.apk"
+            output.outputFileName = "pt-timer-0_02.apk"
             // or for App Bundles (.aab)
             // output.outputFileName = "pt-timer-${variant.versionName}.aab"
         }
     }
 
     defaultConfig {
-        val majorVersion = 0
-        val minorVersion = 2
-        versionCode = majorVersion * 1000 + minorVersion // Example version code
-        versionName = "$majorVersion.$minorVersion.${getTimestamp()}"
-
         applicationId = "com.example.pt_timer"
-        minSdk = 30
+        minSdk = 29
         targetSdk = 36
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = 1
+        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,7 +49,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 
@@ -80,12 +64,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation("androidx.datastore:datastore-preferences:1.2.0")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
     // ... other dependencies
-    implementation("androidx.navigation:navigation-compose:2.9.6") // Or the latest stable version
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.compose.foundation.layout)
+    implementation("androidx.navigation:navigation-compose:2.8.0-beta01") // Or the latest stable version
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     testImplementation(libs.junit)
 

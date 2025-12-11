@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.pt_timer.BuildConfig
+//import com.example.pt_timer.BuildConfig
 import com.example.pt_timer.R
 
 
@@ -61,10 +61,10 @@ fun UserSettingsScreen(
                 .padding(mediumPadding)
         ) {
             Row(Modifier.fillMaxWidth()) {
-                Text(
+                /*Text(
                     text = "PT-Timer controller version: ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.titleMedium
-                )
+                )*/
             }
 
             Spacer(modifier = Modifier.height(20.dp))

@@ -11,8 +11,6 @@ import com.example.pt_timer.ui.TimerApp
 import com.example.pt_timer.ui.theme.PTTimerTheme
 
 class MainActivity : ComponentActivity() {
-
-    @androidx.annotation.RequiresPermission(android.Manifest.permission.BLUETOOTH_CONNECT)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
