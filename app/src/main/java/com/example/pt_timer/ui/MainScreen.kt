@@ -418,7 +418,7 @@ fun TabLayout(
 
                 // TAB ROW
                 PrimaryTabRow(
-                    modifier = Modifier.height(20.dp),
+                    modifier = Modifier.height(30.dp),
                     selectedTabIndex = state
                 ) {
                     titles.forEachIndexed { index, title ->

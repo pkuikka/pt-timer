@@ -35,7 +35,6 @@ fun TimerLayout(
                 keyboardType = KeyboardType.Text,
                 modifier = Modifier.weight(1f),
                 height = 68.dp
-
             )
 
             CommonField(
