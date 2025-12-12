@@ -73,12 +73,19 @@ fun ServoSetupScreen(
             val midPos = uiState.timerData.servoMidPosition.getOrNull(i).toString()
             val onDoneActionMidPos = { newValue: String ->
                 val intValue = newValue.toIntOrNull() ?: 0
-                onUpdateTimerData { copy(servoMidPosition = this.servoMidPosition.toMutableList().apply { set(i, intValue) }) }
+                onUpdateTimerData {
+                    copy(
+                        servoMidPosition = this.servoMidPosition.toMutableList()
+                            .apply { set(i, intValue) })
+                }
             }
             val range = uiState.timerData.servoRange.getOrNull(i).toString()
             val onDoneActionRange = { newValue: String ->
                 val intValue = newValue.toIntOrNull() ?: 0
-                onUpdateTimerData { copy(servoRange = this.servoRange.toMutableList().apply { set(i, intValue) }) }
+                onUpdateTimerData {
+                    copy(
+                        servoRange = this.servoRange.toMutableList().apply { set(i, intValue) })
+                }
             }
             var inUse = false
             var inUseBit = 0

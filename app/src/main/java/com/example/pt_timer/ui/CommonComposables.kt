@@ -37,12 +37,12 @@ import androidx.compose.ui.unit.dp
 fun CommonField(
     value: String,
     onDoneAction: (String) -> Unit,
+    modifier: Modifier = Modifier,
     label: String = "",
     textStyle: TextStyle = MaterialTheme.typography.bodySmall,
     width: (Dp) = 68.dp,
     height: (Dp) = 48.dp,
-    keyboardType: KeyboardType = KeyboardType.Number,
-    modifier: Modifier = Modifier
+    keyboardType: KeyboardType = KeyboardType.Number
 ) {
     var text by remember { mutableStateOf(value) }
 

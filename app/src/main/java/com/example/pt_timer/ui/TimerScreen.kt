@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.example.pt_timer.data.TimerData
 
 @Composable
-fun TimerDataGridLayout(
+fun TimerScreen(
     uiState: UiState,
     onGridItemChanged: (Int, String) -> Unit,
     modifier: Modifier = Modifier
@@ -97,15 +97,18 @@ fun TimerDataGridLayout(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = " ", style = typography.titleSmall)
-            Text(text = "DT at timer ${uiState.timerData.usedDt}", style = typography.titleSmall)
+            Text(text = " ", style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = "DT at timer ${uiState.timerData.usedDt}",
+                style = MaterialTheme.typography.titleSmall
+            )
             Text(
                 text = "Current ${uiState.timerData.batteryVoltage / 10}V",
-                style = typography.titleSmall
+                style = MaterialTheme.typography.titleSmall
             )
             Text(
                 text = "Min ${uiState.timerData.batteryLowestVoltage / 10}V",
-                style = typography.titleSmall
+                style = MaterialTheme.typography.titleSmall
             )
         }
         // -------- Grid --------
@@ -140,7 +143,7 @@ fun TimerDataGridLayout(
                             text = newText
                         },
                         singleLine = true,
-                        textStyle = typography.bodySmall,
+                        textStyle = MaterialTheme.typography.bodySmall,
                         readOnly = (index < 6) || (index % 6 == 0),
                         keyboardOptions = KeyboardOptions.Default.copy(
                             keyboardType = KeyboardType.Number,
@@ -161,21 +164,17 @@ fun TimerDataGridLayout(
 
 @Preview
 @Composable
-fun TimerDataGridLayoutPreview() {
-    // Define the sample UI state with some test data
+fun TimerScreenPreview() {
     val uiState = UiState(
         timerData = TimerData(
-            modelName = "Test Model",
-            modelId = 1,
-            modelSet = 2
+            usedDt = 240,
+            batteryVoltage = 8.2f,
+            batteryLowestVoltage = 7.8f
         )
     )
-
-    // Display the layout with a mock onGridItemChanged handler
-    TimerDataGridLayout(
+    TimerScreen(
         uiState = uiState,
-        onGridItemChanged = { index, value ->
-            println("Grid item changed: Index = $index, Value = $value")
-        }
+        onGridItemChanged = { index, value -> println("Grid item changed: Index = $index, Value = $value") },
+        modifier = Modifier
     )
 }

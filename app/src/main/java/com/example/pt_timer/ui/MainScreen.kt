@@ -1,10 +1,7 @@
 package com.example.pt_timer.ui
 
 // ... other imports
-import android.Manifest
 import android.annotation.SuppressLint
-import android.content.pm.PackageManager
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -54,18 +51,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
 import com.example.pt_timer.data.TIMER_TYPE_E20
@@ -203,35 +200,10 @@ fun MainScreenContent(
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
     LaunchedEffect(key1 = true) {
         onRefreshDevices()
-
-/*        when {
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_CONNECT
-            ) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.BLUETOOTH_SCAN
-                    ) == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED -> {
-                // All necessary permissions are granted
-                onRefreshDevices()
-            }
-            else -> {
-                // Permissions are not granted, show a message to the user
-                Toast.makeText(context, "Bluetooth permissions are required", Toast.LENGTH_SHORT).show()
-                // Optionally, you could also request permissions here if necessary.
-                // Example: navigate to settings or request permission again
-            }
-        }*/
     }
 
     Scaffold(
@@ -250,82 +222,15 @@ fun MainScreenContent(
                         )
                     }
 
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { onCloseMenu() }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("User settings") },
-                            onClick = {
-                                onCloseMenu()
-                                onUserSettingsClick()
-                            }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 6.dp)
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Add row below") },
-                            onClick = {
-                                focusManager.clearFocus()
-                                onCloseMenu()
-                                onAddRowClick()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Delete row") },
-                            onClick = {
-                                focusManager.clearFocus()
-                                onCloseMenu()
-                                onDeleteRowClick()
-                            }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                        DropdownMenuItem(
-                            text = { Text("New F1A/H timer") },
-                            onClick = {
-                                onCloseMenu()
-                                onNewTimerDataClick(TIMER_TYPE_F1A)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("New F1B timer") },
-                            onClick = {
-                                onCloseMenu()
-                                onNewTimerDataClick(TIMER_TYPE_F1B)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("New F1Q timer") },
-                            onClick = {
-                                onCloseMenu()
-                                onNewTimerDataClick(TIMER_TYPE_F1Q)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("New P-30 timer") },
-                            onClick = {
-                                onCloseMenu()
-                                onNewTimerDataClick(TIMER_TYPE_P30)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("New E-36 timer") },
-                            onClick = {
-                                onCloseMenu()
-                                onNewTimerDataClick(TIMER_TYPE_E36)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("New E-20 timer") },
-                            onClick = {
-                                onCloseMenu()
-                                onNewTimerDataClick(TIMER_TYPE_E20)
-                            }
-                        )
-                    }
+                    MenuContent(
+                        showMenu,
+                        onCloseMenu,
+                        onUserSettingsClick,
+                        focusManager,
+                        onAddRowClick,
+                        onDeleteRowClick,
+                        onNewTimerDataClick
+                    )
                 }
             )
         },
@@ -364,6 +269,56 @@ fun MainScreenContent(
     }
 }
 
+
+@Composable
+fun ModelStatusBar(
+    uiState: UiState,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        // -------- Model / ID / Set Row --------
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            CommonField(
+                label = "Model",
+                value = uiState.timerData.modelName,
+                onDoneAction = { newValue: String ->
+                    onUpdateTimerData { copy(modelName = newValue) }
+                },
+                textStyle = MaterialTheme.typography.titleMedium,
+                keyboardType = KeyboardType.Text,
+                modifier = Modifier.weight(1f),
+                height = 68.dp
+            )
+
+            CommonField(
+                label = "ID",
+                value = uiState.timerData.modelId.toString(),
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(modelId = newValue.toIntOrNull() ?: 0) }
+                },
+                textStyle = MaterialTheme.typography.titleMedium,
+                width = 68.dp,
+                height = 68.dp
+            )
+
+            CommonField(
+                label = "Set",
+                value = uiState.timerData.modelSet.toString(),
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(modelSet = newValue.toIntOrNull() ?: 0) }
+                },
+                textStyle = MaterialTheme.typography.titleMedium,
+                width = 68.dp,
+                height = 68.dp
+            )
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TabLayout(
@@ -375,8 +330,9 @@ fun TabLayout(
     modifier: Modifier = Modifier
 ) {
 
-    TimerLayout(uiState, onUpdateTimerData)
+    ModelStatusBar(uiState, onUpdateTimerData)
 
+    // Tab navigation
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_small))
@@ -501,7 +457,7 @@ fun TimerSetupTabContent(
     uiState: UiState,
     onGridItemChanged: (Int, String) -> Unit,
 ) {
-    TimerDataGridLayout(uiState, onGridItemChanged)
+    TimerScreen(uiState, onGridItemChanged)
 }
 
 @Composable
@@ -641,6 +597,94 @@ fun BottomButtonsPanel(
 }
 
 @Composable
+private fun MenuContent(
+    showMenu: Boolean,
+    onCloseMenu: () -> Unit,
+    onUserSettingsClick: () -> Unit,
+    focusManager: FocusManager,
+    onAddRowClick: () -> Unit,
+    onDeleteRowClick: () -> Unit,
+    onNewTimerDataClick: (Int) -> Unit
+) {
+    DropdownMenu(
+        expanded = showMenu,
+        onDismissRequest = { onCloseMenu() }
+    ) {
+        DropdownMenuItem(
+            text = { Text("User settings") },
+            onClick = {
+                onCloseMenu()
+                onUserSettingsClick()
+            }
+        )
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 6.dp)
+        )
+        DropdownMenuItem(
+            text = { Text("Add row below") },
+            onClick = {
+                focusManager.clearFocus()
+                onCloseMenu()
+                onAddRowClick()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Delete row") },
+            onClick = {
+                focusManager.clearFocus()
+                onCloseMenu()
+                onDeleteRowClick()
+            }
+        )
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        DropdownMenuItem(
+            text = { Text("New F1A/H timer") },
+            onClick = {
+                onCloseMenu()
+                onNewTimerDataClick(TIMER_TYPE_F1A)
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("New F1B timer") },
+            onClick = {
+                onCloseMenu()
+                onNewTimerDataClick(TIMER_TYPE_F1B)
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("New F1Q timer") },
+            onClick = {
+                onCloseMenu()
+                onNewTimerDataClick(TIMER_TYPE_F1Q)
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("New P-30 timer") },
+            onClick = {
+                onCloseMenu()
+                onNewTimerDataClick(TIMER_TYPE_P30)
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("New E-36 timer") },
+            onClick = {
+                onCloseMenu()
+                onNewTimerDataClick(TIMER_TYPE_E36)
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("New E-20 timer") },
+            onClick = {
+                onCloseMenu()
+                onNewTimerDataClick(TIMER_TYPE_E20)
+            }
+        )
+    }
+}
+
+@Composable
 fun FileSelectionDialog(
     title: String,
     files: List<String>,
@@ -704,7 +748,12 @@ fun MainScreenPreview() {
     // Create a fake UiState for the preview
     val fakeUiState = UiState(
         btDevices = listOf("Device 1", "Petri-PT-Timer", "Device 3"),
-        selectedBtDevice = "Petri-PT-Timer"
+        selectedBtDevice = "Petri-PT-Timer",
+        timerData = TimerData(
+            modelName = "Model 15",
+            modelId = 1,
+            modelType = 2
+        )
     )
 
     // Call the stateless composable with fake data and empty lambdas

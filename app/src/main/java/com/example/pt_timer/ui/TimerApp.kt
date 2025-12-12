@@ -1,6 +1,5 @@
 package com.example.pt_timer.ui
 
-import androidx.annotation.RequiresPermission
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -9,7 +8,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pt_timer.ui.navigation.Screen
-import android.Manifest
 
 //@RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
 @Composable
