@@ -165,7 +165,8 @@ data class TimerData(
 
             // Warn user about too many used rows or step usage
             val stepValuesInUse = stepValues.any { it > 0 }
-            val needsWarning = ((getUnsignedByte(34) > MAX_TIMER_DATA_ROWS) || stepValuesInUse)
+            val needsWarning = ((getUnsignedByte(34) > MAX_TIMER_DATA_ROWS) ||
+                    stepValuesInUse || getUnsignedByte(1) in intArrayOf(3,4,6))
 
             // --- Map each byte to its corresponding property ---
             val timerData = TimerData(
