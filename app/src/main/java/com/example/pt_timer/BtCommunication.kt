@@ -58,7 +58,6 @@ class BtCommunication(private val context: Context) {
             addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH_SCAN)
         } else {
             // For Android versions below Android 12 (Android 10 and 11)
-            //addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH_CONNECT)
             addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH_ADMIN)
             addPermissionIfNeeded(permissionsToRequest, Manifest.permission.BLUETOOTH)
             addPermissionIfNeeded(permissionsToRequest, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -108,8 +107,6 @@ class BtCommunication(private val context: Context) {
             // If permissions are not granted, return empty list
             return emptyList()
         }
-
-        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
         // Check if Bluetooth is supported and enabled
         if (bluetoothAdapter == null) {

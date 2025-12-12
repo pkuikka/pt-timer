@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
+import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
 import com.example.pt_timer.data.TIMER_TYPE_E20
 import com.example.pt_timer.data.TIMER_TYPE_E36
 import com.example.pt_timer.data.TIMER_TYPE_F1A
@@ -91,6 +92,25 @@ fun MainScreen(
 
     val showMismatchDialog by mainScreenViewModel.showMismatchDialog.collectAsState()
     val mismatchMessage by mainScreenViewModel.mismatchDialogMessage.collectAsState()
+
+    val showOldDataWarningDialog by mainScreenViewModel.showOldDataWarningDialog.collectAsState()
+
+    if (showOldDataWarningDialog) {
+        AlertDialog(
+            onDismissRequest = { mainScreenViewModel.dismissOldDataWarning() },
+            title = { Text("Data Format Warning") },
+            text = { Text("The timer data is from old Palm software and contains following " +
+                    "non supported features\n" +
+                    "- steps\n" +
+                    "- more data rows than supported $MAX_TIMER_DATA_ROWS\n\n" +
+                    "Please check your data carefully before using it.") },
+            confirmButton = {
+                Button(onClick = { mainScreenViewModel.dismissOldDataWarning() }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 
     fun openFileSelectionDialog(title: String, action: (String) -> Unit) {
         dialogTitle = title

@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
 const val MAX_TIMER_DATA_ROWS = 16
+const val NAME_START_POSITION = 160
 const val MAX_TIME_TENTHS_LIMIT = 25
 const val TIMER_TYPE_F1B = 1
 const val TIMER_TYPE_F1A = 2
@@ -132,7 +133,7 @@ data class TimerData(
          * @return A fully populated TimerData object.
          * @throws IllegalArgumentException if the packet is not 256 bytes long.
          */
-        fun fromPacket(packetBytes: ByteArray): TimerData {
+        fun fromPacket(packetBytes: ByteArray): Pair<TimerData, Boolean> {
             // Validate the packet size to prevent errors
             require(packetBytes.size == 262) { "Packet must be 262 bytes long." }
 
@@ -157,20 +158,25 @@ data class TimerData(
             val servo2Values = indices.map { i -> getUnsignedByte(44 + (i * 7)) }
             val servo3Values = indices.map { i -> getUnsignedByte(45 + (i * 7)) }
             val servo4Values = indices.map { i -> getUnsignedByte(46 + (i * 7)) }
-            // val stepValues = indices.map { i -> getUnsignedByte(47 + (i * 7)) }  // skip step values totally
+            val stepValues = indices.map { i -> getUnsignedByte(47 + (i * 7)) }
 
-            val newFirstIndexForDataSetName = getUnsignedByte(35)
+            // Read the old modelName name position to read the model name, but we will store it to new place
+            val oldFirstIndexForDataSetName = getUnsignedByte(35)
+
+            // Warn user about too many used rows or step usage
+            val stepValuesInUse = stepValues.any { it > 0 }
+            val needsWarning = ((getUnsignedByte(34) > MAX_TIMER_DATA_ROWS) || stepValuesInUse)
 
             // --- Map each byte to its corresponding property ---
-            return TimerData(
+            val timerData = TimerData(
                 modelType = getUnsignedByte(1),
                 modelId = getUnsignedByte(2),
                 modelSet = getUnsignedByte(3),
                 configurationByte = packetBytes[4],
-                batteryWarningVoltage = getUnsignedByte(5) / 10.0, // Assuming it's an Int that needs division
-                numberOfDataRows = minOf(getUnsignedByte(6), MAX_TIMER_DATA_ROWS),
+                batteryWarningVoltage = getUnsignedByte(5) / 10.0,
+                numberOfDataRows = minOf(getUnsignedByte(6), MAX_TIMER_DATA_ROWS), // reset data rows to new max value if bigger
                 servoSettingsByte = packetBytes[7],
-                defaultTemperature = getUnsignedByte(8), // Assuming it's just the raw value
+                defaultTemperature = getUnsignedByte(8),
                 buntStatus = getUnsignedByte(9),
                 startUpCycleCount = getUnsignedByte(10),
 
@@ -190,8 +196,8 @@ data class TimerData(
                 timerCalibrationInMicroseconds2 = getUnsignedByte(33),
 
                 // Single byte values
-                maxDataRows = getUnsignedByte(34),
-                firstIndexForDataSetName = getUnsignedByte(35),
+                maxDataRows = minOf(getUnsignedByte(34), MAX_TIMER_DATA_ROWS), // reset max data rows to new max value if bigger
+                firstIndexForDataSetName = minOf(getUnsignedByte(35), NAME_START_POSITION),  // reset mode name position to new max value if bigger
                 maxTimeForSkippingBunt = getUnsignedByte(36),
                 minTimeForSkippingBunt = getUnsignedByte(37),
                 skipBuntGoToRow = getUnsignedByte(38),
@@ -200,14 +206,14 @@ data class TimerData(
 
                 // The main timer grid values from 41 - 131
                 timeValues = timeValues,
-                // stepValues = stepValues,
+                // stepValues = stepValues,  // these are never read as not supported
                 servo1Values = servo1Values,
                 servo2Values = servo2Values,
                 servo3Values = servo3Values,
                 servo4Values = servo4Values,
 
                 // String values read from specific ranges
-                modelName = readString(newFirstIndexForDataSetName..220).trimEnd(),
+                modelName = readString(oldFirstIndexForDataSetName..220).trimEnd(),
                 servo1Label = readString(221..222),
                 servo2Label = readString(223..224),
                 servo3Label = readString(225..226),
@@ -225,6 +231,7 @@ data class TimerData(
                 currentTemperature = getUnsignedByte(259) + 100 - 273.toFloat(), // Kelvin to Celsius conversion
                 usedDt = ((getUnsignedByte(260) * 256) + getUnsignedByte(261)) / 10, // count 2 bytes to DT seconds,
             )
+            return Pair(timerData, needsWarning)
         }
 
         fun createNew(timerType: Int): TimerData {

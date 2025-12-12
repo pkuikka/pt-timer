@@ -285,15 +285,29 @@ class UiViewModel(
         // If it's a header cell (row or col is 0), do nothing.
     }
 
+    private val _showOldDataWarningDialog = MutableStateFlow(false)
+    val showOldDataWarningDialog: StateFlow<Boolean> = _showOldDataWarningDialog.asStateFlow()
+
+    fun dismissOldDataWarning() {
+        _showOldDataWarningDialog.value = false
+    }
+
     private fun processIncomingPacket(packetBytes: ByteArray) {
         try {
             // Use the factory function to create the TimerData object
-            val newTimerData = TimerData.fromPacket(packetBytes)
+            val (newTimerData, needsWarning)  = TimerData.fromPacket(packetBytes)
 
             Log.i("DataParsing", "Updated data: $newTimerData")
+
             // Update the UI state with the newly parsed data
             _uiState.update { currentState ->
                 currentState.copy(timerData = newTimerData)
+            }
+
+            // If a warning is needed, update the dialog state
+            if (needsWarning) {
+                Log.w("DataParsing", "Old data format detected, flagging warning dialog.")
+                _showOldDataWarningDialog.value = true
             }
         } catch (e: IllegalArgumentException) {
             // Handle the case where the packet is the wrong size
