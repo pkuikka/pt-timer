@@ -1,6 +1,8 @@
 package com.example.pt_timer.data
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
 const val MAX_TIMER_DATA_ROWS = 16
 const val MAX_TIME_TENTHS_LIMIT = 25
@@ -15,7 +17,9 @@ const val TIMER_TYPE_E20 = 6
  * Represents the complete set of timer configuration data.
  * The @Serializable annotation allows this class to be converted to/from JSON.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
+@JsonIgnoreUnknownKeys
 data class TimerData(
 
     //  Timer data format (Global G_timer_data(256) as Integer):

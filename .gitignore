@@ -9,8 +9,13 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /app/build
+/app/release
+/app/debug
 /build
 /captures
 .externalNativeBuild
 .cxx
 local.properties
+*.jks
+keystore.properties
+/.kotlin/sessions

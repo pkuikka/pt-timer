@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-//import com.example.pt_timer.BuildConfig
+import com.example.pt_timer.BuildConfig
 import com.example.pt_timer.R
 
 
@@ -61,10 +61,11 @@ fun UserSettingsScreen(
                 .padding(mediumPadding)
         ) {
             Row(Modifier.fillMaxWidth()) {
-                /*Text(
-                    text = "PT-Timer controller version: ${BuildConfig.VERSION_NAME}",
+                Text(
+                    text = "PT-Timer controller version: ${BuildConfig.VERSION_NAME} " +
+                            if (BuildConfig.DEBUG) "(debug)" else "(release)",
                     style = MaterialTheme.typography.titleMedium
-                )*/
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -132,7 +133,6 @@ fun UserSettingsScreen(
         }
     }
 }
-
 
 
 @Preview(showBackground = true)

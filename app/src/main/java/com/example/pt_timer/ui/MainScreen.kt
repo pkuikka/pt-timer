@@ -501,6 +501,28 @@ fun BottomButtonsPanel(
 ) {
     val focusManager = LocalFocusManager.current
     var isExpanded by remember { mutableStateOf(false) }
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    val onShowPermissionDialog = remember { { showPermissionDialog = true } }
+    val onDismissPermissionDialog = remember { { showPermissionDialog = false } }
+
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = onDismissPermissionDialog,
+            title = { Text("Bluetooth Permissions Required") },
+            text = {
+                Text(
+                    "This app requires 'Nearby devices' permission to find and connect " +
+                            "to the timer. Please grant the permission in your phone's settings " +
+                            "and restart the application."
+                )
+            },
+            confirmButton = {
+                Button(onClick = onDismissPermissionDialog) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 
     Column(
         modifier = modifier,
@@ -518,21 +540,35 @@ fun BottomButtonsPanel(
                 modifier = Modifier.weight(1f)
 
             ) {
-
-                OutlinedTextField(
-                    modifier = Modifier
-                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
-                        .fillMaxWidth(),
-                    value = if (btDeviceList.isNotEmpty()) selectedDevice else "Select BT Device",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("BT Device") },
-                    singleLine = true,
-                    maxLines = 1,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
-                    }
-                )
+                if (btDeviceList.isEmpty()) {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onShowPermissionDialog),
+                        value = "BT Permissions Missing",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("BT Device") },
+                        singleLine = true,
+                        maxLines = 1,
+                        enabled = false // Disable the field to indicate an issue
+                    )
+                } else {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            .fillMaxWidth(),
+                        value = if (btDeviceList.isNotEmpty()) selectedDevice else "Select BT Device",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("BT Device") },
+                        singleLine = true,
+                        maxLines = 1,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
+                        }
+                    )
+                }
 
                 // The actual dropdown menu with the list of items
                 ExposedDropdownMenu(

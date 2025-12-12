@@ -1,3 +1,12 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+fun getTimestamp(): String {
+    val sdf = SimpleDateFormat("yyMMddHH", Locale.US)
+    return sdf.format(Date())
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,33 +16,34 @@ plugins {
 
 android {
     namespace = "com.example.pt_timer"
-    compileSdk {
-        version = release(36)
-    }
-
-    //archivesBaseName.set("pt-timer")
-    applicationVariants.all {
-        outputs.all {
-            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "pt-timer-0_02.apk"
-            // or for App Bundles (.aab)
-            // output.outputFileName = "pt-timer-${variant.versionName}.aab"
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.pt_timer"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+
+        val majorVersion = 0
+        val minorVersion = 8
+        versionCode = majorVersion * 1000 + minorVersion
+        versionName = "$majorVersion.$minorVersion.${getTimestamp()}"
+        val archivesBaseName = "pt-timer-${majorVersion}_${minorVersion}"
+        setProperty("archivesBaseName", archivesBaseName)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Enables code shrinking, obfuscation, and optimization for your release build.
+            isMinifyEnabled = true
+            // Enables resource shrinking, which removes unused resources.
+            isShrinkResources = true
+
+            // Specifies the ProGuard rules files.
+            // 'proguard-android-optimize.txt' is a default file from the Android SDK.
+            // 'proguard-rules.pro' is a file in your app's root directory for custom rules.
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -49,6 +59,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

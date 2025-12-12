@@ -19,3 +19,11 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Proguard rules for Jetpack Compose
+-keepclassmembers class androidx.compose.runtime.Recomposer {
+    java.lang.Object findNextDirty(java.lang.Object);
+}
+-keepclassmembers class androidx.compose.runtime.Composer {
+    boolean isComposing();
+}

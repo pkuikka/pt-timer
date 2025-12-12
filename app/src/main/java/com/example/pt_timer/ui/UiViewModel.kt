@@ -330,7 +330,7 @@ class UiViewModel(
     }
 
     fun saveJsonToFile() {
- /*       // We now generate the filename internally from the modelName
+        // We now generate the filename internally from the modelName
         val currentTimerData = _uiState.value.timerData
         val filename = currentTimerData.modelName.replace(Regex("[^a-zA-Z0-9.-]"), "_") + ".json"
 
@@ -356,7 +356,7 @@ class UiViewModel(
                 Toast.makeText(applicationContext, "Error: Failed to save file.", Toast.LENGTH_LONG)
                     .show()
             }
-        }*/
+        }
     }
 
     fun deleteFile(filename: String) {
