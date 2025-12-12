@@ -62,10 +62,22 @@ fun TimerScreen(
                     data + uiState.timerData.timeValues[i].toString()
                 else
                     data + uiState.timerData.timeValues[i].toInt().toString()
-            data = data + uiState.timerData.servo1Values[i].toString()
-            data = data + uiState.timerData.servo2Values[i].toString()
-            data = data + uiState.timerData.servo3Values[i].toString()
-            data = data + uiState.timerData.servo4Values[i].toString()
+            data = if (!uiState.timerData.isServo1NotInUse)
+                data + uiState.timerData.servo1Values[i].toString()
+            else
+                data + ""
+            data = if (!uiState.timerData.isServo2NotInUse)
+                data + uiState.timerData.servo2Values[i].toString()
+            else
+                data + ""
+            data = if (!uiState.timerData.isServo3NotInUse)
+                data + uiState.timerData.servo3Values[i].toString()
+            else
+                data + ""
+            data = if (!uiState.timerData.isServo4NotInUse)
+                data + uiState.timerData.servo4Values[i].toString()
+            else
+                data + ""
         }
 
         // We will now build the final display list (90 items)

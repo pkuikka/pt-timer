@@ -337,7 +337,7 @@ data class TimerData(
                         modelType = timerType,
                         modelName = "E-20 Timer Example",
                         configurationByte = 4.toByte(),
-                        servoSettingsByte = 0.toByte(),
+                        servoSettingsByte = 192.toByte(),
                         numberOfDataRows = 5,
                         maxDataRows = 7,
                         firstIndexForDataSetName = 85,
