@@ -49,13 +49,17 @@ android {
                 "proguard-rules.pro"
             )
         }
+        debug {
+            // This will make it possible to install debug and release versions side by side
+            applicationIdSuffix = ".debug"
+        }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(17) // Use 17 for modern Android development
     }
     buildFeatures {
         compose = true
@@ -75,9 +79,11 @@ dependencies {
     implementation(libs.androidx.room.ktx)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    //noinspection UseTomlInstead (needed for older Android versions)
     implementation("androidx.datastore:datastore-preferences:1.2.0")
-    // ... other dependencies
-    implementation("androidx.navigation:navigation-compose:2.9.6") // Or the latest stable version
+    //noinspection UseTomlInstead (needed for older Android versions)
+    implementation("androidx.navigation:navigation-compose:2.9.6")
+    //noinspection UseTomlInstead (needed for older Android versions)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 
     testImplementation(libs.junit)
