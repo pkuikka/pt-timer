@@ -29,7 +29,6 @@ fun modelTypeAsString(modelType: Int): String {
         3 -> return "P-30"
         4 -> return "E-36"
         5 -> return "F1Q"
-        6 -> return "E-20"
     }
     return "Unknown"
 }
@@ -92,7 +91,7 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
         }
-        if ((modelType == 2) || (modelType == 3) || (modelType == 4) || (modelType == 6)) {
+        if ((modelType == 2) || (modelType == 3) || (modelType == 4)) {
             RowWithCheckBox(
                 if (modelType == 2) {
                     "Beep on tow"

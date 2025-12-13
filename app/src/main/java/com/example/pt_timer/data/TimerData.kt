@@ -12,7 +12,6 @@ const val TIMER_TYPE_F1A = 2
 const val TIMER_TYPE_P30 = 3
 const val TIMER_TYPE_E36 = 4
 const val TIMER_TYPE_F1Q = 5
-const val TIMER_TYPE_E20 = 6
 
 /**
  * Represents the complete set of timer configuration data.
@@ -24,7 +23,7 @@ const val TIMER_TYPE_E20 = 6
 data class TimerData(
 
     //  Timer data format (Global G_timer_data(256) as Integer):
-    val modelType: Int = 2, // 1 = F1B, 2 = F1A, 3 = P-30, 4 = E-36, 5 = F1Q, 6 = E-20
+    val modelType: Int = 2, // 1 = F1B, 2 = F1A, 3 = P-30, 4 = E-36, 5 = F1Q
     val modelId: Int = 0, // 2 = Model # ID
     val modelSet: Int = 0, // 3 = Data set ID
     val configurationByte: Byte = 1, // 4 = Configuration word:
@@ -317,26 +316,6 @@ data class TimerData(
                     defaultTimerData.copy(
                         modelType = timerType,
                         modelName = "E-36 Timer Example",
-                        configurationByte = 4.toByte(),
-                        servoSettingsByte = 192.toByte(),
-                        numberOfDataRows = 5,
-                        maxDataRows = 7,
-                        firstIndexForDataSetName = 85,
-                        servo1Label = "SC",
-                        servo2Label = "S1",
-                        servo3Label = "--",
-                        servo4Label = "--",
-                        row1Label = "DT   ",
-                        row2Label = "ARM  ",
-                        row3Label = "START",
-                        row4Label = "     ",
-                    )
-                }
-
-                TIMER_TYPE_E20 -> {
-                    defaultTimerData.copy(
-                        modelType = timerType,
-                        modelName = "E-20 Timer Example",
                         configurationByte = 4.toByte(),
                         servoSettingsByte = 192.toByte(),
                         numberOfDataRows = 5,

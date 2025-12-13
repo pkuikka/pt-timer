@@ -66,7 +66,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
 import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
-import com.example.pt_timer.data.TIMER_TYPE_E20
 import com.example.pt_timer.data.TIMER_TYPE_E36
 import com.example.pt_timer.data.TIMER_TYPE_F1A
 import com.example.pt_timer.data.TIMER_TYPE_F1B
@@ -728,13 +727,6 @@ private fun MenuContent(
             onClick = {
                 onCloseMenu()
                 onNewTimerDataClick(TIMER_TYPE_E36)
-            }
-        )
-        DropdownMenuItem(
-            text = { Text("New E-20 timer") },
-            onClick = {
-                onCloseMenu()
-                onNewTimerDataClick(TIMER_TYPE_E20)
             }
         )
     }
