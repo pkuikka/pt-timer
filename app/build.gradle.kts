@@ -85,6 +85,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.6")
     //noinspection UseTomlInstead (needed for older Android versions)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    //noinspection UseTomlInstead (needed for older Android versions)
+    implementation("androidx.documentfile:documentfile:1.1.0")
 
     testImplementation(libs.junit)
 

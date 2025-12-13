@@ -97,6 +97,17 @@ fun MainScreen(
 
     val showOldDataWarningDialog by mainScreenViewModel.showOldDataWarningDialog.collectAsState()
 
+    // Launcher for the EXPORT ALL (ACTION_OPEN_DOCUMENT)
+    val exportAllLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree(),
+        onResult = { treeUri: Uri? ->
+            // The user has selected a directory.
+            treeUri?.let {
+                mainScreenViewModel.exportAllFilesToDirectory(it)
+            }
+        }
+    )
+
     // Launcher for the IMPORT file picker (ACTION_OPEN_DOCUMENT)
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -118,6 +129,10 @@ fun MainScreen(
             }
         }
     )
+
+    val onExportAllClick = {
+        exportAllLauncher.launch(null)
+    }
 
     val onExportClick = {
         val modelName = mainScreenUiState.timerData.modelName.replace(Regex("[^a-zA-Z0-9.-]"), "_")
@@ -208,6 +223,7 @@ fun MainScreen(
         onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
         onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
         onUserSettingsClick = onUserSettingsClick,
+        onExportAllClick = onExportAllClick,
         onExportClick = onExportClick,
         onImportClick = onImportClick,
         onAddRowClick = { mainScreenViewModel.addRow() },
@@ -248,6 +264,7 @@ fun MainScreenContent(
     onRefreshDevices: () -> Unit,
     onUserSettingsClick: () -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
+    onExportAllClick: () -> Unit,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
     onAddRowClick: () -> Unit,
@@ -285,6 +302,7 @@ fun MainScreenContent(
                         onCloseMenu,
                         focusManager,
                         onUserSettingsClick,
+                        onExportAllClick,
                         onExportClick,
                         onImportClick,
                         onAddRowClick,
@@ -698,6 +716,7 @@ private fun MenuContent(
     onCloseMenu: () -> Unit,
     focusManager: FocusManager,
     onUserSettingsClick: () -> Unit,
+    onExportAllClick: () -> Unit,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
     onAddRowClick: () -> Unit,
@@ -717,6 +736,14 @@ private fun MenuContent(
         )
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 6.dp)
+        )
+        DropdownMenuItem(
+            text = { Text("Export all to files") },
+            onClick = {
+                focusManager.clearFocus()
+                onCloseMenu()
+                onExportAllClick()
+            }
         )
         DropdownMenuItem(
             text = { Text("Export to file") },
@@ -877,6 +904,7 @@ fun MainScreenPreview() {
         onDeviceSelected = {},
         onRefreshDevices = {},
         onUserSettingsClick = {},
+        onExportAllClick = {},
         onExportClick = {},
         onImportClick  = {},
         onAddRowClick = {},

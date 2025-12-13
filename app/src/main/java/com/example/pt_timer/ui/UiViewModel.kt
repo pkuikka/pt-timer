@@ -395,6 +395,67 @@ class UiViewModel(
         }
     }
 
+    fun exportAllFilesToDirectory(treeUri: Uri) {
+        viewModelScope.launch {
+            // Get the directory the user picked
+            val parentDirectory = androidx.documentfile.provider.DocumentFile.fromTreeUri(applicationContext, treeUri)
+            if (parentDirectory == null || !parentDirectory.canWrite()) {
+                Log.e("UiViewModel", "Cannot write to the selected directory.")
+                android.os.Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "Error: Cannot write to selected folder.", Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
+
+            // Get the list of all internal files
+            val internalFiles = applicationContext.filesDir.listFiles { _, name -> name.endsWith(".json") }
+            if (internalFiles.isNullOrEmpty()) {
+                Log.i("UiViewModel", "No files to export.")
+                android.os.Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "No saved files to export.", Toast.LENGTH_SHORT).show()
+                }
+                return@launch
+            }
+
+            var successCount = 0
+            var failureCount = 0
+
+            // Loop through each internal file and export it
+            for (file in internalFiles) {
+                try {
+                    // Create a new file in the selected external directory
+                    val newFile = parentDirectory.createFile("application/json", file.name)
+                    if (newFile == null) {
+                        failureCount++
+                        continue // Skip to the next file
+                    }
+
+                    // Read the content of the internal file
+                    val content = file.readBytes()
+
+                    // Write the content to the new external file
+                    applicationContext.contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
+                        outputStream.write(content)
+                    }
+                    successCount++
+                } catch (e: Exception) {
+                    failureCount++
+                    Log.e("UiViewModel", "Failed to export file: ${file.name}", e)
+                }
+            }
+
+            // Report the result to the user
+            val message = if (failureCount > 0) {
+                "Export complete. Success: $successCount, Failed: $failureCount"
+            } else {
+                "Exported $successCount files successfully."
+            }
+            android.os.Handler(Looper.getMainLooper()).post {
+                Toast.makeText(applicationContext, message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     fun importTimerDataFromUri(uri: Uri) {
         viewModelScope.launch {
             try {
