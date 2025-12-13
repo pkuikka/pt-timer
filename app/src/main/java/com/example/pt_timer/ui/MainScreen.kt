@@ -148,11 +148,15 @@ fun MainScreen(
         AlertDialog(
             onDismissRequest = { mainScreenViewModel.dismissOldDataWarning() },
             title = { Text("Data Format Warning") },
-            text = { Text("The timer data is from old Palm software and contains following " +
-                    "non supported features\n" +
-                    "- steps\n" +
-                    "- more data rows than supported $MAX_TIMER_DATA_ROWS\n\n" +
-                    "Please check your data carefully before using it.") },
+            text = {
+                Text(
+                    "The timer data is from old Palm software and contains following " +
+                            "non supported features\n" +
+                            "- steps\n" +
+                            "- more data rows than supported $MAX_TIMER_DATA_ROWS\n\n" +
+                            "Please check your data carefully before using it."
+                )
+            },
             confirmButton = {
                 Button(onClick = { mainScreenViewModel.dismissOldDataWarning() }) {
                     Text("OK")
@@ -416,10 +420,10 @@ fun TabLayout(
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_small))
     ) {
 
-        var state by remember { mutableIntStateOf(0) }
+        var state by remember { mutableIntStateOf(1) } // 1 = start at timer tab
         val distanceThreshold = uiState.displaySwipeDistance
         val velocityThreshold = uiState.displaySwipeVelocity
-        val titles = listOf("Timer setup", "Servo setup", "Settings")
+        val titles = listOf("Comments", "Timer", "Servo", "Settings")
 
         val velocityTracker = remember { VelocityTracker() }
         var dragAmountTotal by remember { mutableFloatStateOf(0f) }
@@ -476,7 +480,7 @@ fun TabLayout(
                             onClick = { state = index },
                             modifier = Modifier
                                 .height(28.dp)
-                                .padding(horizontal = 4.dp)
+                                .padding(horizontal = 0.dp)
                                 .clip(RoundedCornerShape(50))
                                 .background(
                                     if (state == index) Color(0xFFE0E0E0)
@@ -486,7 +490,7 @@ fun TabLayout(
                                 Text(
                                     text = title,
                                     color = if (state == index) Color.Black else Color.Gray,
-                                    fontSize = 13.sp
+                                    fontSize = 12.sp
                                 )
                             }
                         )
@@ -499,18 +503,23 @@ fun TabLayout(
                         .fillMaxSize()
                 ) {
                     when (state) {
-                        0 -> TimerSetupTabContent(
+                        0 -> CommentsTabContent(
+                            uiState,
+                            onUpdateTimerData,
+                        )
+
+                        1 -> TimerSetupTabContent(
                             uiState,
                             onGridItemChanged
                         )
 
-                        1 -> ServoSetupTabContent(
+                        2 -> ServoSetupTabContent(
                             uiState,
                             onUpdateTimerData,
                             onUpdateServoSettingsByte
                         )
 
-                        2 -> SettingsTabContent(
+                        3 -> SettingsTabContent(
                             uiState,
                             onUpdateConfigurationByte,
                             onUpdateTimerData
@@ -522,13 +531,13 @@ fun TabLayout(
     }
 }
 
-// Tab 0: Start Tab content
-/*
 @Composable
-fun StartTabContent(uiState: UiState) {
-    val timerData = uiState.timerData
-    Text(timerData.modelName) // Display the model name from the timer data
-}*/
+fun CommentsTabContent(
+    uiState: UiState,
+    onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
+) {
+    CommentsScreen(uiState, onUpdateTimerData)
+}
 
 @Composable
 fun TimerSetupTabContent(
@@ -906,7 +915,7 @@ fun MainScreenPreview() {
         onUserSettingsClick = {},
         onExportAllClick = {},
         onExportClick = {},
-        onImportClick  = {},
+        onImportClick = {},
         onAddRowClick = {},
         onDeleteRowClick = {},
         onNewTimerDataClick = {},

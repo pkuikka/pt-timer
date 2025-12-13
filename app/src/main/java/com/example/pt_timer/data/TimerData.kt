@@ -102,6 +102,9 @@ data class TimerData(
     val batteryLowestVoltage: Float = 0f,
     val currentTemperature: Float = 0f,
     val usedDt: Int = 0, // Counts together configured DT time + DIP switches
+
+    // Data only used in the app
+    val comments: String = ""
 ) {
 
     // --- Configuration byte Booleans ---
