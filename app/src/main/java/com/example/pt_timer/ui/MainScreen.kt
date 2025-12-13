@@ -2,6 +2,9 @@ package com.example.pt_timer.ui
 
 // ... other imports
 import android.annotation.SuppressLint
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -94,6 +97,38 @@ fun MainScreen(
 
     val showOldDataWarningDialog by mainScreenViewModel.showOldDataWarningDialog.collectAsState()
 
+    // Launcher for the IMPORT file picker (ACTION_OPEN_DOCUMENT)
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri: Uri? ->
+            // The user has selected a file.
+            uri?.let {
+                mainScreenViewModel.importTimerDataFromUri(it)
+            }
+        }
+    )
+
+    // Launcher for the EXPORT file picker (ACTION_CREATE_DOCUMENT)
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+        onResult = { uri: Uri? ->
+            // The user has chosen a location and filename.
+            uri?.let {
+                mainScreenViewModel.exportTimerDataToUri(it)
+            }
+        }
+    )
+
+    val onExportClick = {
+        val modelName = mainScreenUiState.timerData.modelName.replace(Regex("[^a-zA-Z0-9.-]"), "_")
+        val suggestedName = "$modelName.json"
+        exportLauncher.launch(suggestedName)
+    }
+
+    val onImportClick = {
+        importLauncher.launch(arrayOf("application/json"))
+    }
+
     if (showOldDataWarningDialog) {
         AlertDialog(
             onDismissRequest = { mainScreenViewModel.dismissOldDataWarning() },
@@ -173,6 +208,8 @@ fun MainScreen(
         onDeviceSelected = { deviceName -> mainScreenViewModel.onDeviceSelected(deviceName) },
         onRefreshDevices = { mainScreenViewModel.refreshPairedDevices() },
         onUserSettingsClick = onUserSettingsClick,
+        onExportClick = onExportClick,
+        onImportClick = onImportClick,
         onAddRowClick = { mainScreenViewModel.addRow() },
         onDeleteRowClick = { mainScreenViewModel.deleteRow() },
         onNewTimerDataClick = { mainScreenViewModel.newTimerData(it) },
@@ -211,6 +248,8 @@ fun MainScreenContent(
     onRefreshDevices: () -> Unit,
     onUserSettingsClick: () -> Unit,
     onGridItemChanged: (Int, String) -> Unit,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
     onNewTimerDataClick: (Int) -> Unit,
@@ -244,8 +283,10 @@ fun MainScreenContent(
                     MenuContent(
                         showMenu,
                         onCloseMenu,
-                        onUserSettingsClick,
                         focusManager,
+                        onUserSettingsClick,
+                        onExportClick,
+                        onImportClick,
                         onAddRowClick,
                         onDeleteRowClick,
                         onNewTimerDataClick
@@ -655,8 +696,10 @@ fun BottomButtonsPanel(
 private fun MenuContent(
     showMenu: Boolean,
     onCloseMenu: () -> Unit,
-    onUserSettingsClick: () -> Unit,
     focusManager: FocusManager,
+    onUserSettingsClick: () -> Unit,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
     onAddRowClick: () -> Unit,
     onDeleteRowClick: () -> Unit,
     onNewTimerDataClick: (Int) -> Unit
@@ -670,6 +713,25 @@ private fun MenuContent(
             onClick = {
                 onCloseMenu()
                 onUserSettingsClick()
+            }
+        )
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 6.dp)
+        )
+        DropdownMenuItem(
+            text = { Text("Export to file") },
+            onClick = {
+                focusManager.clearFocus()
+                onCloseMenu()
+                onExportClick()
+            }
+        )
+        DropdownMenuItem(
+            text = { Text("Import from file") },
+            onClick = {
+                focusManager.clearFocus()
+                onCloseMenu()
+                onImportClick()
             }
         )
         HorizontalDivider(
@@ -815,6 +877,8 @@ fun MainScreenPreview() {
         onDeviceSelected = {},
         onRefreshDevices = {},
         onUserSettingsClick = {},
+        onExportClick = {},
+        onImportClick  = {},
         onAddRowClick = {},
         onDeleteRowClick = {},
         onNewTimerDataClick = {},

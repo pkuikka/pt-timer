@@ -3,6 +3,7 @@ package com.example.pt_timer.ui
 import android.Manifest
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
@@ -390,6 +391,56 @@ class UiViewModel(
                 }
             } catch (e: Exception) {
                 Log.e("UiViewModel", "File deletion failed.", e)
+            }
+        }
+    }
+
+    fun importTimerDataFromUri(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                // Use a content resolver to open an input stream from the URI
+                applicationContext.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    val jsonString = inputStream.bufferedReader().use { it.readText() }
+                    val loadedTimerData = Json.decodeFromString<TimerData>(jsonString)
+
+                    _uiState.update { it.copy(timerData = loadedTimerData) }
+                    Log.i("UiViewModel", "File imported successfully from URI: $uri")
+                    // Show a confirmation toast
+                    android.os.Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(applicationContext, "Imported successfully!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("UiViewModel", "Failed to import file from URI: $uri", e)
+                android.os.Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "Error: Failed to import file.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun exportTimerDataToUri(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                // Get the current data to save
+                val currentTimerData = _uiState.value.timerData
+                val json = Json { prettyPrint = true; encodeDefaults = true }
+                val jsonString = json.encodeToString(currentTimerData)
+
+                // Use a content resolver to open an output stream to the URI
+                applicationContext.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(jsonString.toByteArray())
+                }
+
+                Log.i("UiViewModel", "File exported successfully to URI: $uri")
+                android.os.Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "Exported successfully!", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Log.e("UiViewModel", "Failed to export file to URI: $uri", e)
+                android.os.Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(applicationContext, "Error: Failed to export file.", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
