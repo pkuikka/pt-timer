@@ -691,6 +691,45 @@ class UiViewModel(
         }
     }
 
+    fun copyDataSet(sourceSet: Int, destinationSet: Int) {
+        _uiState.update { currentState ->
+            val currentTimerData = currentState.timerData
+
+            // Make mutable copies of all the data tables
+            val timeValuesTable = currentTimerData.timeValues.toMutableList()
+            val servo1ValuesTable = currentTimerData.servo1Values.toMutableList()
+            val servo2ValuesTable = currentTimerData.servo2Values.toMutableList()
+            val servo3ValuesTable = currentTimerData.servo3Values.toMutableList()
+            val servo4ValuesTable = currentTimerData.servo4Values.toMutableList()
+            val stepValuesTable = currentTimerData.stepValues.toMutableList()
+
+            // Copy the data from the source index to the destination index
+            timeValuesTable[destinationSet] = timeValuesTable[sourceSet]
+            servo1ValuesTable[destinationSet] = servo1ValuesTable[sourceSet]
+            servo2ValuesTable[destinationSet] = servo2ValuesTable[sourceSet]
+            servo3ValuesTable[destinationSet] = servo3ValuesTable[sourceSet]
+            servo4ValuesTable[destinationSet] = servo4ValuesTable[sourceSet]
+            stepValuesTable[destinationSet] = stepValuesTable[sourceSet]
+
+            // Create a new TimerData object with the updated tables
+            val updatedTimerData = currentTimerData.copy(
+                timeValues = timeValuesTable,
+                servo1Values = servo1ValuesTable,
+                servo2Values = servo2ValuesTable,
+                servo3Values = servo3ValuesTable,
+                servo4Values = servo4ValuesTable,
+                stepValues = stepValuesTable
+            )
+
+            // Update the state
+            currentState.copy(timerData = updatedTimerData)
+        }
+        // Optionally, show a toast message to confirm the copy
+        android.os.Handler(Looper.getMainLooper()).post {
+            Toast.makeText(applicationContext, "Copied data from set $sourceSet to $destinationSet", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     fun newTimerData(timerType: Int) {
         val newTimerData = TimerData.createNew(timerType)
 
