@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pt_timer.R
+import com.example.pt_timer.data.MAX_DATA_SETS
 import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
 import com.example.pt_timer.data.TIMER_TYPE_E36
 import com.example.pt_timer.data.TIMER_TYPE_F1A
@@ -352,6 +354,7 @@ fun MainScreenContent(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModelStatusBar(
     uiState: UiState,
@@ -387,16 +390,45 @@ fun ModelStatusBar(
                 height = 68.dp
             )
 
-            CommonField(
-                label = "Set",
-                value = uiState.timerData.modelSet.toString(),
-                onDoneAction = { newValue ->
-                    onUpdateTimerData { copy(modelSet = newValue.toIntOrNull() ?: 0) }
-                },
-                textStyle = MaterialTheme.typography.titleMedium,
-                width = 68.dp,
-                height = 68.dp
-            )
+            var isSetExpanded by remember { mutableStateOf(false) }
+
+            ExposedDropdownMenuBox(
+                expanded = isSetExpanded,
+                onExpandedChange = { isSetExpanded = it },
+                modifier = Modifier.width(80.dp) // Give it a specific width
+            ) {
+                // This is the TextField part of the dropdown
+                OutlinedTextField(
+                    value = uiState.timerData.modelSet.toString(),
+                    onValueChange = {}, // onValueChange is not needed for a read-only dropdown
+                    readOnly = true,
+                    label = { Text("Set") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSetExpanded)
+                    },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
+                )
+
+                // This is the actual dropdown menu with the list of items
+                ExposedDropdownMenu(
+                    expanded = isSetExpanded,
+                    onDismissRequest = { isSetExpanded = false }
+                ) {
+                    // Create a list of numbers from 0 to MAX_DATA_SETS - 1
+                    (0 until MAX_DATA_SETS).forEach { selectionIndex ->
+                        DropdownMenuItem(
+                            text = { Text(selectionIndex.toString()) },
+                            onClick = {
+                                // When an item is clicked, update the state
+                                onUpdateTimerData { copy(modelSet = selectionIndex) }
+                                // Close the menu
+                                isSetExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

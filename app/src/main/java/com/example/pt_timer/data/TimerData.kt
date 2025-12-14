@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
 const val MAX_TIMER_DATA_ROWS = 16
+const val MAX_DATA_SETS = 10
 const val NAME_START_POSITION = 160
 const val MAX_TIME_TENTHS_LIMIT = 25
 const val TIMER_TYPE_F1B = 1
@@ -76,12 +77,12 @@ data class TimerData(
     //   ...
     // 209 + 7 = Row 25 time, step lines, and values for servos 1 - 4
     // Map them to more easier column values and force step value always to be 0
-    val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { it.toDouble() },
-    val servo1Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 125 },
-    val servo2Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 126 },
-    val servo3Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 127 },
-    val servo4Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 128 },
-    val stepValues: List<Int> = List(MAX_TIMER_DATA_ROWS) { 0 },
+    val timeValues: List<List<Double>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { it.toDouble() } },
+    val servo1Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 125 } },
+    val servo2Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 126 } },
+    val servo3Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 127 } },
+    val servo4Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 128 } },
+    val stepValues: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 0 } },
 
     val modelName: String = "Default Name", // 202 - 220 = Data set name (extended to bigger by reducing rows, default 23 rows gives 202)
     val servo1Label: String = "Servo 1", // 221 - 222 = Servo 1 label
@@ -125,7 +126,6 @@ data class TimerData(
     val isServo3NotInUse: Boolean get() = (servoSettingsByte.toInt() and 64) != 0
     val isServo4NotInUse: Boolean get() = (servoSettingsByte.toInt() and 128) != 0
 
-
     companion object {
         /**
          * Factory function to create a TimerData object from the raw 256-byte packet
@@ -154,13 +154,15 @@ data class TimerData(
             // Map main timer values
             // Row 1 time * 2 bytes, values for servos 1 - 4, step lines (total of 7 bytes)
             val indices = 0 until MAX_TIMER_DATA_ROWS
-            val timeValues =
-                indices.map { i -> (((getUnsignedByte(41 + (i * 7)) * 256) + getUnsignedByte(42 + (i * 7))) / 10.0) }
+            val timeValues = indices.map { i -> (((getUnsignedByte(41 + (i * 7)) * 256) + getUnsignedByte(42 + (i * 7))) / 10.0) }
             val servo1Values = indices.map { i -> getUnsignedByte(43 + (i * 7)) }
             val servo2Values = indices.map { i -> getUnsignedByte(44 + (i * 7)) }
             val servo3Values = indices.map { i -> getUnsignedByte(45 + (i * 7)) }
             val servo4Values = indices.map { i -> getUnsignedByte(46 + (i * 7)) }
             val stepValues = indices.map { i -> getUnsignedByte(47 + (i * 7)) }
+            val activeSetIndex = getUnsignedByte(3)
+            val defaultData = TimerData() // Get a default object with 10 empty sets
+
 
             // Read the old modelName name position to read the model name, but we will store it to new place
             val oldFirstIndexForDataSetName = getUnsignedByte(35)
@@ -208,12 +210,14 @@ data class TimerData(
                 empty40 = 0,
 
                 // The main timer grid values from 41 - 131
-                timeValues = timeValues,
-                // stepValues = stepValues,  // these are never read as not supported
-                servo1Values = servo1Values,
-                servo2Values = servo2Values,
-                servo3Values = servo3Values,
-                servo4Values = servo4Values,
+                timeValues = defaultData.timeValues.toMutableList().apply { set(activeSetIndex, timeValues) },
+                servo1Values = defaultData.servo1Values.toMutableList().apply { set(activeSetIndex, servo1Values) },
+                servo2Values = defaultData.servo2Values.toMutableList().apply { set(activeSetIndex, servo2Values) },
+                servo3Values = defaultData.servo3Values.toMutableList().apply { set(activeSetIndex, servo3Values) },
+                servo4Values = defaultData.servo4Values.toMutableList().apply { set(activeSetIndex, servo4Values) },
+                // stepValues are never read as not supported
+                // stepValues = defaultData.stepValues.toMutableList().apply { set(activeSetIndex, stepValues) }
+
 
                 // String values read from specific ranges
                 modelName = readString(oldFirstIndexForDataSetName..220).trimEnd(),
@@ -422,13 +426,13 @@ data class TimerData(
         // The main timer grid values (7 bytes per row)
         for (i in 0 until MAX_TIMER_DATA_ROWS) {
             val baseIndex = 41 + (i * 7)
-            val timeAsInt = (timeValues[i] * 10).toInt()
+            val timeAsInt = (timeValues[modelSet][i] * 10).toInt()
             setUnsignedInt(baseIndex, timeAsInt)  // Time (2 bytes)
-            setByte(baseIndex + 2, servo1Values[i])  // Servo 1 (1 byte)
-            setByte(baseIndex + 3, servo2Values[i])  // Servo 2 (1 byte)
-            setByte(baseIndex + 4, servo3Values[i])  // Servo 3 (1 byte)
-            setByte(baseIndex + 5, servo4Values[i])  // Servo 4 (1 byte)
-            setByte(baseIndex + 6, stepValues[i])    // Step value (1 byte)
+            setByte(baseIndex + 2, servo1Values[modelSet][i])  // Servo 1 (1 byte)
+            setByte(baseIndex + 3, servo2Values[modelSet][i])  // Servo 2 (1 byte)
+            setByte(baseIndex + 4, servo3Values[modelSet][i])  // Servo 3 (1 byte)
+            setByte(baseIndex + 5, servo4Values[modelSet][i])  // Servo 4 (1 byte)
+            setByte(baseIndex + 6, stepValues[modelSet][i])    // Step value (1 byte)
         }
 
         // String properties
