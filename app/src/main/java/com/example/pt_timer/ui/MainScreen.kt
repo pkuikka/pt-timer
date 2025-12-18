@@ -253,9 +253,6 @@ fun MainScreen(
                 bitValue,
                 updateServoSettingsByte = true
             )
-        },
-        onCopyClick = { source, destination ->
-            mainScreenViewModel.copyDataSet(source, destination)
         }
     )
 }
@@ -282,7 +279,6 @@ fun MainScreenContent(
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onCopyClick: (sourceSet: Int, destinationSet: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
@@ -352,7 +348,6 @@ fun MainScreenContent(
                 onUpdateConfigurationByte,
                 onUpdateTimerData,
                 onUpdateServoSettingsByte,
-                onCopyClick
             )
         }
     }
@@ -446,7 +441,6 @@ fun TabLayout(
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onCopyClick: (sourceSet: Int, destinationSet: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -554,14 +548,13 @@ fun TabLayout(
                         2 -> ServoSetupTabContent(
                             uiState,
                             onUpdateTimerData,
-                            onUpdateServoSettingsByte,
-                            onCopyClick
+                            onUpdateServoSettingsByte
                         )
 
                         3 -> SettingsTabContent(
                             uiState,
                             onUpdateConfigurationByte,
-                            onUpdateTimerData,
+                            onUpdateTimerData
                         )
                     }
                 }
@@ -591,13 +584,11 @@ fun ServoSetupTabContent(
     uiState: UiState,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onCopyClick: (sourceSet: Int, destinationSet: Int) -> Unit,
 ) {
     ServoSetupScreen(
         uiState,
         onUpdateTimerData,
-        onUpdateServoSettingsByte,
-        onCopyClick
+        onUpdateServoSettingsByte
     )
 }
 
@@ -964,7 +955,6 @@ fun MainScreenPreview() {
         onUpdateConfigurationByte = { _, _ -> },
         onUpdateTimerData = { _ -> },
         onUpdateServoSettingsByte = { newSettings, position -> println("Servo settings byte updated: $newSettings at position $position") },
-        onCopyClick = {_, _ -> }
     )
 }
 

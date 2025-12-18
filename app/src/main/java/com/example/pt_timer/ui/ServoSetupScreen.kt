@@ -8,41 +8,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.pt_timer.R
-import com.example.pt_timer.data.MAX_DATA_SETS
 import com.example.pt_timer.data.TimerData
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServoSetupScreen(
     uiState: UiState,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
-    onCopyClick: (sourceSet: Int, destinationSet: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -177,74 +160,6 @@ fun ServoSetupScreen(
                 )
             }
         }
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            var isSetExpanded by remember { mutableStateOf(false) }
-            var destinationSet by remember { mutableStateOf<Int?>(null) }
-
-            Text(
-                text = "Current set ${uiState.timerData.modelSet} -->",
-                style = typography.titleMedium
-            )
-
-            ExposedDropdownMenuBox(
-                expanded = isSetExpanded,
-                onExpandedChange = { isSetExpanded = it },
-                modifier = Modifier.width(80.dp) // Give it a specific width
-            ) {
-                // This is the TextField part of the dropdown
-                OutlinedTextField(
-                    value = destinationSet?.toString() ?: "", // Show selected value or empty
-                    onValueChange = {}, // onValueChange is not needed for a read-only dropdown
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSetExpanded)
-                    },
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
-                )
-
-                // This is the actual dropdown menu with the list of items
-                ExposedDropdownMenu(
-                    expanded = isSetExpanded,
-                    onDismissRequest = { isSetExpanded = false }
-                ) {
-                    (0 until MAX_DATA_SETS).forEach { selectionIndex ->
-                        if (selectionIndex == uiState.timerData.modelSet) {
-                            // skip current
-                        } else {
-                            DropdownMenuItem(
-                                text = { Text(selectionIndex.toString()) },
-                                onClick = {
-                                    destinationSet = selectionIndex
-                                    isSetExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Copy Button
-            Button(
-                onClick = {
-                    val currentSet = uiState.timerData.modelSet
-                    val dest = destinationSet
-                    // 4. Pass both source and destination to the onCopyClick lambda
-                    if (dest != null) {
-                        onCopyClick(currentSet, dest)
-                    }
-                },
-                // Enable the button only when a destination has been selected
-                enabled = destinationSet != null
-            ) {
-                Text(text = stringResource(R.string.button_copy), fontSize = 16.sp)
-            }
-        }
     }
 }
 
@@ -310,8 +225,7 @@ fun ServoSetupScreenPreview() {
     ServoSetupScreen(
         uiState = uiState,
         onUpdateServoSettingsByte = { _, _ -> },
-        onUpdateTimerData = { _ -> },
-        onCopyClick = { _, _ -> }
+        onUpdateTimerData = { _ -> }
     )
 }
 
