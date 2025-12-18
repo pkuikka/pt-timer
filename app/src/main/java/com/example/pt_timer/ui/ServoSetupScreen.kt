@@ -187,8 +187,7 @@ fun ServoSetupScreen(
             var destinationSet by remember { mutableStateOf<Int?>(null) }
 
             Text(
-                modifier = Modifier.width(200.dp),
-                text = "Current set ${uiState.timerData.modelSet} ${uiState.timerData.setNames[uiState.timerData.modelSet]} -->",
+                text = "Current set ${uiState.timerData.modelSet} -->",
                 style = typography.titleMedium
             )
 
@@ -205,7 +204,6 @@ fun ServoSetupScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSetExpanded)
                     },
-                    singleLine = true,
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
                 )
@@ -220,7 +218,7 @@ fun ServoSetupScreen(
                             // skip current
                         } else {
                             DropdownMenuItem(
-                                text = { Text("$selectionIndex ${uiState.timerData.setNames[selectionIndex]}") },
+                                text = { Text(selectionIndex.toString()) },
                                 onClick = {
                                     destinationSet = selectionIndex
                                     isSetExpanded = false
@@ -246,74 +244,6 @@ fun ServoSetupScreen(
             ) {
                 Text(text = stringResource(R.string.button_copy), fontSize = 16.sp)
             }
-        }
-
-        // --- Apply set names
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            var isSetExpanded by remember { mutableStateOf(false) }
-            var nameDestinationSet by remember { mutableStateOf(0) }
-
-            Text(
-                text = "Set",
-                style = typography.titleMedium
-            )
-
-            ExposedDropdownMenuBox(
-                expanded = isSetExpanded,
-                onExpandedChange = { isSetExpanded = it },
-                modifier = Modifier.width(80.dp) // Give it a specific width
-            ) {
-                // This is the TextField part of the dropdown
-                OutlinedTextField(
-                    value = nameDestinationSet.toString(),
-                    onValueChange = {}, // onValueChange is not needed for a read-only dropdown
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSetExpanded)
-                    },
-                    singleLine = true,
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
-                )
-
-                // This is the actual dropdown menu with the list of items
-                ExposedDropdownMenu(
-                    expanded = isSetExpanded,
-                    onDismissRequest = { isSetExpanded = false }
-                ) {
-                    (0 until MAX_DATA_SETS).forEach { selectionIndex ->
-                        DropdownMenuItem(
-                            { Text("$selectionIndex ${uiState.timerData.setNames[selectionIndex]}") },
-                            onClick = {
-                                nameDestinationSet = selectionIndex
-                                isSetExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-            Text(
-                text = "name to",
-                style = typography.titleMedium
-            )
-            CommonField(
-                value = uiState.timerData.setNames[nameDestinationSet],
-                onDoneAction = { newValue ->
-                    onUpdateTimerData {
-                        // Create a mutable copy of the list to update the specific index
-                        val updatedList = setNames.toMutableList()
-                        if (nameDestinationSet in updatedList.indices) {
-                            updatedList[nameDestinationSet] = newValue
-                        }
-                        copy(setNames = updatedList)
-                    }
-                },
-                keyboardType = KeyboardType.Text,
-                width = 150.dp
-            )
         }
     }
 }
