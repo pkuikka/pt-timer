@@ -234,9 +234,6 @@ class UiViewModel(
         val row = index / 6
         val col = index % 6
 
-        val modelSet = _uiState.value.timerData.modelSet
-
-
         Log.i("UiViewModel", "onGridItemChanged: row=$row, col=$col, newValue=$newValue")
         if (col == 0)
             _uiState.update { it.copy(selectedRow = row) }
@@ -249,57 +246,42 @@ class UiViewModel(
                 val updatedTimerData = when (col) {
                     1 -> { // Time values (which are Doubles, so we need to handle them differently)
                         val newDoubleValue = newValue.toDoubleOrNull() ?: 0.0
-                        // Create a mutable copy of the outer list
-                        val updatedTimeValues = currentState.timerData.timeValues.toMutableList().apply {
-                            // Get the specific inner list that needs updating
-                            val innerList = this[modelSet].toMutableList().apply {
-                                // Update the value at the correct index
-                                this[row - 1] = newDoubleValue
-                            }
-                            // Replace the old inner list with the updated one
-                            this[modelSet] = innerList
+                        val updatedList = currentState.timerData.timeValues.toMutableList().apply {
+                            this[row - 1] = newDoubleValue
                         }
-                        currentState.timerData.copy(timeValues = updatedTimeValues)
+                        currentState.timerData.copy(timeValues = updatedList)
                     }
 
                     2 -> { // Servo 1 values
-                        val updatedServoValues = currentState.timerData.servo1Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo1Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-                        currentState.timerData.copy(servo1Values = updatedServoValues)
+                        currentState.timerData.copy(servo1Values = updatedList)
                     }
 
                     3 -> { // Servo 2 values
-                        val updatedServoValues = currentState.timerData.servo2Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo2Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-                        currentState.timerData.copy(servo2Values = updatedServoValues)
+                        currentState.timerData.copy(servo2Values = updatedList)
                     }
 
                     4 -> { // Servo 3 values
-                        val updatedServoValues = currentState.timerData.servo3Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo3Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-
-                        currentState.timerData.copy(servo3Values = updatedServoValues)
+                        currentState.timerData.copy(servo3Values = updatedList)
                     }
+
                     5 -> { // Servo 4 values
-                        val updatedServoValues = currentState.timerData.servo4Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo4Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-                        currentState.timerData.copy(servo4Values = updatedServoValues)
+                        currentState.timerData.copy(servo4Values = updatedList)
                     }
                     // We assume there are only 5 editable columns.
                     else -> currentState.timerData // No change if the column is out of expected range.

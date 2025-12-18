@@ -54,30 +54,28 @@ fun TimerScreen(
             "", "", "", "", "", "", "", "", "", "", "", ""
         )
 
-        val modelSet = uiState.timerData.modelSet
-
         // The actual numerical data from the device
         var data = listOf<String>()
         for (i in 0 until (uiState.timerData.numberOfDataRows)) {
             data =
-                if (uiState.timerData.timeValues[modelSet][i] < com.example.pt_timer.data.MAX_TIME_TENTHS_LIMIT)
-                    data + uiState.timerData.timeValues[modelSet][i].toString()
+                if (uiState.timerData.timeValues[i] < com.example.pt_timer.data.MAX_TIME_TENTHS_LIMIT)
+                    data + uiState.timerData.timeValues[i].toString()
                 else
-                    data + uiState.timerData.timeValues[modelSet][i].toInt().toString()
+                    data + uiState.timerData.timeValues[i].toInt().toString()
             data = if (!uiState.timerData.isServo1NotInUse)
-                data + uiState.timerData.servo1Values[modelSet][i].toString()
+                data + uiState.timerData.servo1Values[i].toString()
             else
                 data + ""
             data = if (!uiState.timerData.isServo2NotInUse)
-                data + uiState.timerData.servo2Values[modelSet][i].toString()
+                data + uiState.timerData.servo2Values[i].toString()
             else
                 data + ""
             data = if (!uiState.timerData.isServo3NotInUse)
-                data + uiState.timerData.servo3Values[modelSet][i].toString()
+                data + uiState.timerData.servo3Values[i].toString()
             else
                 data + ""
             data = if (!uiState.timerData.isServo4NotInUse)
-                data + uiState.timerData.servo4Values[modelSet][i].toString()
+                data + uiState.timerData.servo4Values[i].toString()
             else
                 data + ""
         }
