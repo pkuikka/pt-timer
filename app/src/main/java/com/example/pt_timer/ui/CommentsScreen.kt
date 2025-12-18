@@ -35,6 +35,18 @@ fun CommentsScreen(
         modifier = modifier
             .padding(dimensionResource(R.dimen.padding_small)),
     ) {
+        var timeStamp = ""
+        if (uiState.timerData.writeTimeStamp.length == 10) {
+            timeStamp = uiState.timerData.writeTimeStamp.take(2) + "-" +
+                    uiState.timerData.writeTimeStamp.substring(2, 4) + "-" +
+                    uiState.timerData.writeTimeStamp.substring(4, 6) + " " +
+                    uiState.timerData.writeTimeStamp.substring(6, 8) + ":" +
+                    uiState.timerData.writeTimeStamp.substring(8, 10)
+        }
+        Text(
+            text = "Last write time is $timeStamp",
+            style = MaterialTheme.typography.bodyMedium
+        )
         Text(
             text = "Comments",
             style = MaterialTheme.typography.bodyMedium

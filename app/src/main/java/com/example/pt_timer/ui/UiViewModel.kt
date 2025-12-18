@@ -27,6 +27,9 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileNotFoundException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class UiViewModel(
@@ -143,6 +146,11 @@ class UiViewModel(
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun write() {
         val currentTimerData = _uiState.value.timerData
+
+        // Update write timestamp before writing it to timer
+        val newTimeStamp = SimpleDateFormat("yyMMddHHmm", Locale.US).format(Date())
+        updateTimerData { copy(writeTimeStamp = newTimeStamp) }
+
         val packetToSend = currentTimerData.toPacket()
 
         btCommunication.connectDevice(selectedDevice = uiState.value.selectedBtDevice) { isSuccess ->
