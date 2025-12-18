@@ -293,6 +293,7 @@ data class TimerData(
                         configurationByte = 4.toByte(),
                         servoSettingsByte = 0.toByte(),
                         numberOfDataRows = 6,
+                        skipBuntGoToRow = 6,
                         servo1Label = "EL",
                         servo2Label = "RD",
                         servo3Label = "WW",

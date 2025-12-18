@@ -163,6 +163,13 @@ fun SettingsScreen(
             }
         }
         if (modelType == 5) {
+            RowWithField(
+                "If limiter cut, jump to line #",
+                "${uiState.timerData.skipBuntGoToRow}",
+                onDoneAction = { newValue ->
+                    onUpdateTimerData { copy(skipBuntGoToRow = newValue.toIntOrNull() ?: 0) }
+                }
+            )
             val motorTime =
                 (uiState.timerData.motorRunTime1 * 256 + uiState.timerData.motorRunTime2) / 10.0
             RowWithText("Last motor run time ${motorTime}s ")
