@@ -13,4 +13,5 @@
     <string name="label_set">Set</string>
 
     <string name="button_copy">Copy</string>
+    <string name="button_apply">Apply</string>
 </resources>
