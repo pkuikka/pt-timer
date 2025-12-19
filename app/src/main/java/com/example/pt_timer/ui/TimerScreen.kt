@@ -162,8 +162,16 @@ fun TimerScreen(
 
                                 // We allow empty string while typing, but mark it as error if needed
                                 if (newText.isNotEmpty()) {
-                                    val intVal = newText.toIntOrNull()
-                                    isError = intVal == null || intVal < minValue || intVal > maxValue
+                                    // Check if this is the "Time" column (Index 1)
+                                    if (index % 6 == 1) {
+                                        val doubleVal = newText.toDoubleOrNull()
+                                        // Check against bounds (auto-converts Int bounds to Double for comparison)
+                                        isError = doubleVal == null || doubleVal < minValue || doubleVal > maxValue
+                                    } else {
+                                        // Servo columns must be Integers
+                                        val intVal = newText.toIntOrNull()
+                                        isError = intVal == null || intVal < minValue || intVal > maxValue
+                                    }
                                 } else {
                                     isError = false // Or true if empty is not allowed
                                 }
