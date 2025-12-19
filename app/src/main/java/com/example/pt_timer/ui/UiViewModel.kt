@@ -8,6 +8,9 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -22,6 +25,7 @@ import com.example.pt_timer.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -48,6 +52,11 @@ class UiViewModel(
 
     private var onConfirmWriteAction: (() -> Unit)? = null
     private var onCancelWriteAction: (() -> Unit)? = null
+
+    private val Context.dataStore by preferencesDataStore(name = "settings")
+    private fun getCommentKey(modelName: String) =
+        stringPreferencesKey("comment_$modelName")
+
 
     fun onConfirmMismatchDialog() {
         onConfirmWriteAction?.invoke()
@@ -166,6 +175,33 @@ class UiViewModel(
                         _showMismatchDialog.value = true
                     }
                 )
+            }
+        }
+    }
+
+    fun loadCommentForModel(modelName: String) {
+        viewModelScope.launch {
+            applicationContext.dataStore.data
+                .map { preferences ->
+                    // Return the comment or empty string if none exists
+                    preferences[getCommentKey(modelName)] ?: ""
+                }
+                .collect { storedComment ->
+                    // Update the UI state without triggering a full file load
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            timerData = currentState.timerData.copy(comments = storedComment)
+                        )
+                    }
+                }
+        }
+    }
+
+    // 3. Function to save the comment whenever it changes
+    fun saveCommentForModel(modelName: String, comment: String) {
+        viewModelScope.launch {
+            applicationContext.dataStore.edit { preferences ->
+            preferences[getCommentKey(modelName)] = comment
             }
         }
     }
@@ -313,6 +349,8 @@ class UiViewModel(
                 currentState.copy(timerData = newTimerData)
             }
 
+            loadCommentForModel(newTimerData.modelName)
+
             // If a warning is needed, update the dialog state
             if (needsWarning) {
                 Log.w("DataParsing", "Old data format detected, flagging warning dialog.")
@@ -335,6 +373,7 @@ class UiViewModel(
                 val loadedTimerData = Json.decodeFromString<TimerData>(jsonString)
 
                 _uiState.update { it.copy(timerData = loadedTimerData) }
+                loadCommentForModel(loadedTimerData.modelName)
                 Log.i("UiViewModel", "File loaded: $filename")
                 android.os.Handler(Looper.getMainLooper()).post {
                     Toast.makeText(applicationContext, "Loaded: $filename", Toast.LENGTH_SHORT)
@@ -366,6 +405,7 @@ class UiViewModel(
                 outputStream.write(jsonString.toByteArray())
             }
 
+            saveCommentForModel(currentTimerData.modelName, currentTimerData.comments)
             Log.i("UiViewModel", "Successfully saved file to $filename")
             android.os.Handler(Looper.getMainLooper()).post {
                 Toast.makeText(applicationContext, "File saved successfully!", Toast.LENGTH_LONG)
@@ -389,6 +429,7 @@ class UiViewModel(
                 if (file.exists()) {
                     val deleted = file.delete()
                     if (deleted) {
+                        saveCommentForModel(filename, "")
                         Log.i("UiViewModel", "File deleted: $filename")
                         android.os.Handler(Looper.getMainLooper()).post {
                             Toast.makeText(applicationContext, "File deleted.", Toast.LENGTH_SHORT)
@@ -473,6 +514,8 @@ class UiViewModel(
                     val loadedTimerData = Json.decodeFromString<TimerData>(jsonString)
 
                     _uiState.update { it.copy(timerData = loadedTimerData) }
+                    loadCommentForModel(loadedTimerData.modelName)
+
                     Log.i("UiViewModel", "File imported successfully from URI: $uri")
                     // Show a confirmation toast
                     android.os.Handler(Looper.getMainLooper()).post {
