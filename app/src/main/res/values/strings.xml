@@ -11,4 +11,6 @@
     <string name="label_model">Model</string>
     <string name="label_id">ID</string>
     <string name="label_set">Set</string>
+
+    <string name="button_copy">Copy</string>
 </resources>
