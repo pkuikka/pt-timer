@@ -62,8 +62,8 @@ data class TimerData(
     val motorRunTime2: Int = 0,  // and byte #2
     val servoTemperatureMidPosition: List<Int> = List(4) { 127 }, // 21 - 24 = Servo 1 - 4 temperature correction mid position
     val servoTemperatureRange: List<Int> = List(4) { 127 }, // 25 - 28 = Servo 1 - 4 temperature range
-    val empty29: Int = 255,  // 29, 30 =  empty / reserve
-    val empty30: Int = 255,
+    val empty29: Int = 0,  // 29, 30 =  empty / reserve
+    val empty30: Int = 0,
     val timerCalibrationInMilliseconds: Int = 15, // 31 =  Timer calibration in milliseconds
     val timerCalibrationInMicroseconds1: Int = 1, // 32 - 33 = Timer calibration in microseconds
     val timerCalibrationInMicroseconds2: Int = 150, // 32 - 33 = Timer calibration in microseconds
@@ -73,7 +73,7 @@ data class TimerData(
     val minTimeForSkippingBunt: Int = 0, // 37 =  F1A: min time for skipping bunt (if 0, never skip)
     val skipBuntGoToRow: Int = 8, // 38 =  F1A: go to this line when skipping bunt
     val dtPowerDownDelay: Int = 0, // 39 = DT power down delay (to keep logger on) from versions 1.55 onwards.
-    val empty40: Int = 255,  // 40 = empty / reserve
+    val empty40: Int = 0,  // 40 = empty / reserve
 
     // 41 - 42, 43, 44 - 47  = Row 1 time * 2 bytes, values for servos 1 - 4, step lines (total of 7 bytes)
     // 48 + 7 = Row 2 time, step lines, and values for servos 1 - 4
@@ -93,9 +93,9 @@ data class TimerData(
     val servo2Label: String = "Servo 2", // 223 - 224 = Servo 2 label
     val servo3Label: String = "Servo 3", // 225 - 226 = Servo 3 label
     val servo4Label: String = "Servo 4", // 227 - 228 = Servo 4 label
-    val empty229: Int = 255,  // 229, 230, 231 = empty / reserve
-    val empty230: Int = 255,
-    val empty231: Int = 255,
+    val empty229: Int = 0,  // 229, 230, 231 = empty / reserve
+    val empty230: Int = 0,
+    val empty231: Int = 0,
     val row1Label: String = "Row 1", // 232 - 236 = Row 1 label
     val row2Label: String = "Row 2", // 237 + 5 = Row 2 label
     val row3Label: String = "Row 3", // 242 + 5 = Row 3 label
@@ -167,7 +167,6 @@ data class TimerData(
             val stepValues = indices.map { i -> getUnsignedByte(47 + (i * 7)) }
             val activeSetIndex = getUnsignedByte(3)
             val defaultData = TimerData() // Get a default object with 10 empty sets
-
 
             // Read the old modelName name position to read the model name, but we will store it to new place
             val oldFirstIndexForDataSetName = getUnsignedByte(35)

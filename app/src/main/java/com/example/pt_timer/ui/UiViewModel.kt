@@ -78,8 +78,6 @@ class UiViewModel(
     }
 
     init {
-        resetMainScreen()
-
         viewModelScope.launch {
             userPreferencesRepository.timerWriteDelayMillis.collect { timerWriteDelayMillis ->
                 // 3. Update the UI state with the value from the repository
@@ -111,10 +109,6 @@ class UiViewModel(
                 }
             }
         }
-    }
-
-    fun resetMainScreen() {
-
     }
 
     // Generic function to update the TimerData object in the state
@@ -197,7 +191,6 @@ class UiViewModel(
         }
     }
 
-    // 3. Function to save the comment whenever it changes
     fun saveCommentForModel(modelName: String, comment: String) {
         viewModelScope.launch {
             applicationContext.dataStore.edit { preferences ->
