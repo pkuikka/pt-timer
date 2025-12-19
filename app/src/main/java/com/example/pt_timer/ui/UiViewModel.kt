@@ -21,6 +21,7 @@ import com.example.pt_timer.BtCommunication
 import com.example.pt_timer.PtTimerApplication
 import com.example.pt_timer.data.MAX_TIMER_DATA_ROWS
 import com.example.pt_timer.data.TimerData
+import com.example.pt_timer.data.TimerDataSetsWrapper
 import com.example.pt_timer.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +57,8 @@ class UiViewModel(
     private val Context.dataStore by preferencesDataStore(name = "settings")
     private fun getCommentKey(modelName: String) =
         stringPreferencesKey("comment_$modelName")
+    private fun getSetsKey(modelName: String) =
+        stringPreferencesKey("sets_data_$modelName")
 
 
     fun onConfirmMismatchDialog() {
@@ -199,6 +202,76 @@ class UiViewModel(
         }
     }
 
+    fun deleteCommentForModel(modelName: String) {
+        viewModelScope.launch {
+            applicationContext.dataStore.edit { preferences ->
+                preferences.remove(getCommentKey(modelName))
+            }
+        }
+    }
+
+    fun loadSetsForModel(modelName: String) {
+        viewModelScope.launch {
+            applicationContext.dataStore.data
+                .map { preferences ->
+                    val jsonString = preferences[getSetsKey(modelName)]
+                    if (!jsonString.isNullOrEmpty()) {
+                        try {
+                            Json.decodeFromString<TimerDataSetsWrapper>(jsonString)
+                        } catch (_: Exception) {
+                            null // Fallback to null if parsing fails
+                        }
+                    } else {
+                        null
+                    }
+                }
+                .collect { loadedSets ->
+                    if (loadedSets != null) {
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                timerData = currentState.timerData.copy(
+                                    setNames = loadedSets.setNames,
+                                    setTimeValues = loadedSets.setTimeValues,
+                                    setServo1Values = loadedSets.setServo1Values,
+                                    setServo2Values = loadedSets.setServo2Values,
+                                    setServo3Values = loadedSets.setServo3Values,
+                                    setServo4Values = loadedSets.setServo4Values
+                                )
+                            )
+                        }
+                    }
+                }
+        }
+    }
+
+    // Call this whenever you update any of the 'set...' properties in TimerData
+    fun saveSetsForModel(modelName: String, timerData: TimerData) {
+        viewModelScope.launch {
+            val wrapper = TimerDataSetsWrapper(
+                setNames = timerData.setNames,
+                setTimeValues = timerData.setTimeValues,
+                setServo1Values = timerData.setServo1Values,
+                setServo2Values = timerData.setServo2Values,
+                setServo3Values = timerData.setServo3Values,
+                setServo4Values = timerData.setServo4Values
+            )
+
+            val jsonString = Json.encodeToString(wrapper)
+
+            applicationContext.dataStore.edit { preferences ->
+                preferences[getSetsKey(modelName)] = jsonString
+            }
+        }
+    }
+
+    fun deleteSetsForModel(modelName: String) {
+        viewModelScope.launch {
+            applicationContext.dataStore.edit { preferences ->
+                preferences.remove(getSetsKey(modelName))
+            }
+        }
+    }
+
     fun onDelayChanged(delay: Float) {
         viewModelScope.launch {
             userPreferencesRepository.saveLayoutPreference(delay)
@@ -263,9 +336,6 @@ class UiViewModel(
         val row = index / 6
         val col = index % 6
 
-        val modelSet = _uiState.value.timerData.modelSet
-
-
         Log.i("UiViewModel", "onGridItemChanged: row=$row, col=$col, newValue=$newValue")
         if (col == 0)
             _uiState.update { it.copy(selectedRow = row) }
@@ -278,57 +348,42 @@ class UiViewModel(
                 val updatedTimerData = when (col) {
                     1 -> { // Time values (which are Doubles, so we need to handle them differently)
                         val newDoubleValue = newValue.toDoubleOrNull() ?: 0.0
-                        // Create a mutable copy of the outer list
-                        val updatedTimeValues = currentState.timerData.timeValues.toMutableList().apply {
-                            // Get the specific inner list that needs updating
-                            val innerList = this[modelSet].toMutableList().apply {
-                                // Update the value at the correct index
-                                this[row - 1] = newDoubleValue
-                            }
-                            // Replace the old inner list with the updated one
-                            this[modelSet] = innerList
+                        val updatedList = currentState.timerData.timeValues.toMutableList().apply {
+                            this[row - 1] = newDoubleValue
                         }
-                        currentState.timerData.copy(timeValues = updatedTimeValues)
+                        currentState.timerData.copy(timeValues = updatedList)
                     }
 
                     2 -> { // Servo 1 values
-                        val updatedServoValues = currentState.timerData.servo1Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo1Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-                        currentState.timerData.copy(servo1Values = updatedServoValues)
+                        currentState.timerData.copy(servo1Values = updatedList)
                     }
 
                     3 -> { // Servo 2 values
-                        val updatedServoValues = currentState.timerData.servo2Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo2Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-                        currentState.timerData.copy(servo2Values = updatedServoValues)
+                        currentState.timerData.copy(servo2Values = updatedList)
                     }
 
                     4 -> { // Servo 3 values
-                        val updatedServoValues = currentState.timerData.servo3Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo3Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-
-                        currentState.timerData.copy(servo3Values = updatedServoValues)
+                        currentState.timerData.copy(servo3Values = updatedList)
                     }
+
                     5 -> { // Servo 4 values
-                        val updatedServoValues = currentState.timerData.servo4Values.toMutableList().apply {
-                            val innerList = this[modelSet].toMutableList().apply {
+                        val updatedList =
+                            currentState.timerData.servo4Values.toMutableList().apply {
                                 this[row - 1] = newIntValue
                             }
-                            this[modelSet] = innerList
-                        }
-                        currentState.timerData.copy(servo4Values = updatedServoValues)
+                        currentState.timerData.copy(servo4Values = updatedList)
                     }
                     // We assume there are only 5 editable columns.
                     else -> currentState.timerData // No change if the column is out of expected range.
@@ -359,8 +414,8 @@ class UiViewModel(
             _uiState.update { currentState ->
                 currentState.copy(timerData = newTimerData)
             }
-
             loadCommentForModel(newTimerData.modelName)
+            loadSetsForModel(newTimerData.modelName)
 
             // If a warning is needed, update the dialog state
             if (needsWarning) {
@@ -385,6 +440,8 @@ class UiViewModel(
 
                 _uiState.update { it.copy(timerData = loadedTimerData) }
                 loadCommentForModel(loadedTimerData.modelName)
+                loadSetsForModel(loadedTimerData.modelName)
+
                 Log.i("UiViewModel", "File loaded: $filename")
                 android.os.Handler(Looper.getMainLooper()).post {
                     Toast.makeText(applicationContext, "Loaded: $filename", Toast.LENGTH_SHORT)
@@ -417,6 +474,8 @@ class UiViewModel(
             }
 
             saveCommentForModel(currentTimerData.modelName, currentTimerData.comments)
+            saveSetsForModel(currentTimerData.modelName, currentTimerData)
+
             Log.i("UiViewModel", "Successfully saved file to $filename")
             android.os.Handler(Looper.getMainLooper()).post {
                 Toast.makeText(applicationContext, "File saved successfully!", Toast.LENGTH_LONG)
@@ -440,7 +499,8 @@ class UiViewModel(
                 if (file.exists()) {
                     val deleted = file.delete()
                     if (deleted) {
-                        saveCommentForModel(filename, "")
+                        deleteCommentForModel(filename)
+                        deleteSetsForModel(filename)
                         Log.i("UiViewModel", "File deleted: $filename")
                         android.os.Handler(Looper.getMainLooper()).post {
                             Toast.makeText(applicationContext, "File deleted.", Toast.LENGTH_SHORT)
@@ -526,6 +586,7 @@ class UiViewModel(
 
                     _uiState.update { it.copy(timerData = loadedTimerData) }
                     loadCommentForModel(loadedTimerData.modelName)
+                    loadSetsForModel(loadedTimerData.modelName)
 
                     Log.i("UiViewModel", "File imported successfully from URI: $uri")
                     // Show a confirmation toast
@@ -740,29 +801,26 @@ class UiViewModel(
             val currentTimerData = currentState.timerData
 
             // Make mutable copies of all the data tables
-            val timeValuesTable = currentTimerData.timeValues.toMutableList()
-            val servo1ValuesTable = currentTimerData.servo1Values.toMutableList()
-            val servo2ValuesTable = currentTimerData.servo2Values.toMutableList()
-            val servo3ValuesTable = currentTimerData.servo3Values.toMutableList()
-            val servo4ValuesTable = currentTimerData.servo4Values.toMutableList()
-            val stepValuesTable = currentTimerData.stepValues.toMutableList()
+            val timeValuesTable = currentTimerData.setTimeValues.toMutableList()
+            val servo1ValuesTable = currentTimerData.setServo1Values.toMutableList()
+            val servo2ValuesTable = currentTimerData.setServo2Values.toMutableList()
+            val servo3ValuesTable = currentTimerData.setServo3Values.toMutableList()
+            val servo4ValuesTable = currentTimerData.setServo4Values.toMutableList()
 
             // Copy the data from the source index to the destination index
-            timeValuesTable[destinationSet] = timeValuesTable[sourceSet]
-            servo1ValuesTable[destinationSet] = servo1ValuesTable[sourceSet]
-            servo2ValuesTable[destinationSet] = servo2ValuesTable[sourceSet]
-            servo3ValuesTable[destinationSet] = servo3ValuesTable[sourceSet]
-            servo4ValuesTable[destinationSet] = servo4ValuesTable[sourceSet]
-            stepValuesTable[destinationSet] = stepValuesTable[sourceSet]
+            timeValuesTable[destinationSet] = currentTimerData.timeValues
+            servo1ValuesTable[destinationSet] = currentTimerData.servo1Values
+            servo2ValuesTable[destinationSet] = currentTimerData.servo2Values
+            servo3ValuesTable[destinationSet] = currentTimerData.servo3Values
+            servo4ValuesTable[destinationSet] = currentTimerData.servo4Values
 
             // Create a new TimerData object with the updated tables
             val updatedTimerData = currentTimerData.copy(
-                timeValues = timeValuesTable,
-                servo1Values = servo1ValuesTable,
-                servo2Values = servo2ValuesTable,
-                servo3Values = servo3ValuesTable,
-                servo4Values = servo4ValuesTable,
-                stepValues = stepValuesTable
+                setTimeValues = timeValuesTable,
+                setServo1Values = servo1ValuesTable,
+                setServo2Values = servo2ValuesTable,
+                setServo3Values = servo3ValuesTable,
+                setServo4Values = servo4ValuesTable,
             )
 
             // Update the state
@@ -773,6 +831,56 @@ class UiViewModel(
             Toast.makeText(applicationContext, "Copied data from set $sourceSet to $destinationSet", Toast.LENGTH_SHORT).show()
         }
     }
+
+    fun switchDataSet(switchToSet: Int) {
+        _uiState.update { currentState ->
+            val currentTimerData = currentState.timerData
+            val currentSetIndex = currentTimerData.modelSet
+
+            val newSetTimeValues = currentTimerData.setTimeValues.toMutableList()
+            newSetTimeValues[currentSetIndex] = currentTimerData.timeValues
+
+            val newSetServo1Values = currentTimerData.setServo1Values.toMutableList()
+            newSetServo1Values[currentSetIndex] = currentTimerData.servo1Values
+
+            val newSetServo2Values = currentTimerData.setServo2Values.toMutableList()
+            newSetServo2Values[currentSetIndex] = currentTimerData.servo2Values
+
+            val newSetServo3Values = currentTimerData.setServo3Values.toMutableList()
+            newSetServo3Values[currentSetIndex] = currentTimerData.servo3Values
+
+            val newSetServo4Values = currentTimerData.setServo4Values.toMutableList()
+            newSetServo4Values[currentSetIndex] = currentTimerData.servo4Values
+
+            val newActiveTimeValues = newSetTimeValues[switchToSet].toList()
+            val newActiveServo1Values = newSetServo1Values[switchToSet].toList()
+            val newActiveServo2Values = newSetServo2Values[switchToSet].toList()
+            val newActiveServo3Values = newSetServo3Values[switchToSet].toList()
+            val newActiveServo4Values = newSetServo4Values[switchToSet].toList()
+
+            val updatedTimerData = currentTimerData.copy(
+                modelSet = switchToSet,
+
+                // Update the storage tables (with the previously active data saved)
+                setTimeValues = newSetTimeValues,
+                setServo1Values = newSetServo1Values,
+                setServo2Values = newSetServo2Values,
+                setServo3Values = newSetServo3Values,
+                setServo4Values = newSetServo4Values,
+
+                timeValues = newActiveTimeValues,
+                servo1Values = newActiveServo1Values,
+                servo2Values = newActiveServo2Values,
+                servo3Values = newActiveServo3Values,
+                servo4Values = newActiveServo4Values
+            )
+
+            currentState.copy(timerData = updatedTimerData)
+        }
+
+        Log.i("UiViewModel", "Switched data set to $switchToSet")
+    }
+
 
     fun newTimerData(timerType: Int) {
         val newTimerData = TimerData.createNew(timerType)

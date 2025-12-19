@@ -80,12 +80,12 @@ data class TimerData(
     //   ...
     // 209 + 7 = Row 25 time, step lines, and values for servos 1 - 4
     // Map them to more easier column values and force step value always to be 0
-    val timeValues: List<List<Double>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { it.toDouble() } },
-    val servo1Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 125 } },
-    val servo2Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 126 } },
-    val servo3Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 127 } },
-    val servo4Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 128 } },
-    val stepValues: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 0 } },
+    val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { it.toDouble() },
+    val servo1Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 125 },
+    val servo2Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 126 },
+    val servo3Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 127 },
+    val servo4Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 128 },
+    val stepValues: List<Int> = List(MAX_TIMER_DATA_ROWS) { 0 },
 
     val modelName: String = "Default Name", // 160 - 210 = Data set name (extended to bigger by reducing rows, default 23 rows gives 202)
     val writeTimeStamp: String = "2501010101", // 211 - 220 = Last write timestamp
@@ -110,8 +110,15 @@ data class TimerData(
 
     // Data only used in the app
     val comments: String = "",
+
     val setNames: List<String> = List(MAX_DATA_SETS) { "" },
-) {
+    val setTimeValues: List<List<Double>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { it.toDouble() * 2.0 } },
+    val setServo1Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 111 } },
+    val setServo2Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 112 } },
+    val setServo3Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 113 } },
+    val setServo4Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 114 } },
+
+    ) {
 
     // --- Configuration byte Booleans ---
     val isSwitch1Enabled: Boolean get() = (configurationByte.toInt() and 1) != 0
@@ -165,8 +172,6 @@ data class TimerData(
             val servo3Values = indices.map { i -> getUnsignedByte(45 + (i * 7)) }
             val servo4Values = indices.map { i -> getUnsignedByte(46 + (i * 7)) }
             val stepValues = indices.map { i -> getUnsignedByte(47 + (i * 7)) }
-            val activeSetIndex = getUnsignedByte(3)
-            val defaultData = TimerData() // Get a default object with 10 empty sets
 
             // Read the old modelName name position to read the model name, but we will store it to new place
             val oldFirstIndexForDataSetName = getUnsignedByte(35)
@@ -214,11 +219,11 @@ data class TimerData(
                 empty40 = 0,
 
                 // The main timer grid values from 41 - 131
-                timeValues = defaultData.timeValues.toMutableList().apply { set(activeSetIndex, timeValues) },
-                servo1Values = defaultData.servo1Values.toMutableList().apply { set(activeSetIndex, servo1Values) },
-                servo2Values = defaultData.servo2Values.toMutableList().apply { set(activeSetIndex, servo2Values) },
-                servo3Values = defaultData.servo3Values.toMutableList().apply { set(activeSetIndex, servo3Values) },
-                servo4Values = defaultData.servo4Values.toMutableList().apply { set(activeSetIndex, servo4Values) },
+                timeValues = timeValues,
+                servo1Values = servo1Values,
+                servo2Values = servo2Values,
+                servo3Values = servo3Values,
+                servo4Values = servo4Values,
                 // stepValues are never read as not supported
                 // stepValues = defaultData.stepValues.toMutableList().apply { set(activeSetIndex, stepValues) }
 
@@ -432,13 +437,13 @@ data class TimerData(
         // The main timer grid values (7 bytes per row)
         for (i in 0 until MAX_TIMER_DATA_ROWS) {
             val baseIndex = 41 + (i * 7)
-            val timeAsInt = (timeValues[modelSet][i] * 10).toInt()
+            val timeAsInt = (timeValues[i] * 10).toInt()
             setUnsignedInt(baseIndex, timeAsInt)  // Time (2 bytes)
-            setByte(baseIndex + 2, servo1Values[modelSet][i])  // Servo 1 (1 byte)
-            setByte(baseIndex + 3, servo2Values[modelSet][i])  // Servo 2 (1 byte)
-            setByte(baseIndex + 4, servo3Values[modelSet][i])  // Servo 3 (1 byte)
-            setByte(baseIndex + 5, servo4Values[modelSet][i])  // Servo 4 (1 byte)
-            setByte(baseIndex + 6, stepValues[modelSet][i])    // Step value (1 byte)
+            setByte(baseIndex + 2, servo1Values[i])  // Servo 1 (1 byte)
+            setByte(baseIndex + 3, servo2Values[i])  // Servo 2 (1 byte)
+            setByte(baseIndex + 4, servo3Values[i])  // Servo 3 (1 byte)
+            setByte(baseIndex + 5, servo4Values[i])  // Servo 4 (1 byte)
+            setByte(baseIndex + 6, stepValues[i])    // Step value (1 byte)
         }
 
         // String properties
@@ -458,3 +463,13 @@ data class TimerData(
         return packet
     }
 }
+
+@Serializable
+data class TimerDataSetsWrapper(
+    val setNames: List<String> = List(MAX_DATA_SETS) { "" },
+    val setTimeValues: List<List<Double>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { it.toDouble() * 2.0 } },
+    val setServo1Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 111 } },
+    val setServo2Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 112 } },
+    val setServo3Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 113 } },
+    val setServo4Values: List<List<Int>> = List(MAX_DATA_SETS) { List(MAX_TIMER_DATA_ROWS) { 114 } }
+)

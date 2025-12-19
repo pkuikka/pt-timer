@@ -178,6 +178,7 @@ fun ServoSetupScreen(
             }
         }
 
+        // --- Copy 1 set to another
         HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),

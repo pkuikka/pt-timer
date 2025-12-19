@@ -254,6 +254,9 @@ fun MainScreen(
                 updateServoSettingsByte = true
             )
         },
+        onSwitchDataSet = { newIndex ->
+            mainScreenViewModel.switchDataSet(newIndex)
+        },
         onCopyClick = { source, destination ->
             mainScreenViewModel.copyDataSet(source, destination)
         }
@@ -282,6 +285,7 @@ fun MainScreenContent(
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
+    onSwitchDataSet: (Int) -> Unit,
     onCopyClick: (sourceSet: Int, destinationSet: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -352,6 +356,7 @@ fun MainScreenContent(
                 onUpdateConfigurationByte,
                 onUpdateTimerData,
                 onUpdateServoSettingsByte,
+                onSwitchDataSet,
                 onCopyClick
             )
         }
@@ -364,6 +369,7 @@ fun MainScreenContent(
 fun ModelStatusBar(
     uiState: UiState,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
+    onSwitchDataSet: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -427,7 +433,7 @@ fun ModelStatusBar(
                             text = { Text("$selectionIndex ${uiState.timerData.setNames[selectionIndex]}") },
                             onClick = {
                                 // When an item is clicked, update the state
-                                onUpdateTimerData { copy(modelSet = selectionIndex) }
+                                onSwitchDataSet(selectionIndex)
                                 // Close the menu
                                 isSetExpanded = false
                             }
@@ -447,11 +453,12 @@ fun TabLayout(
     onUpdateConfigurationByte: (Boolean, Int) -> Unit,
     onUpdateTimerData: (TimerData.() -> TimerData) -> Unit,
     onUpdateServoSettingsByte: (Boolean, Int) -> Unit,
+    onSwitchDataSet: (Int) -> Unit,
     onCopyClick: (sourceSet: Int, destinationSet: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
-    ModelStatusBar(uiState, onUpdateTimerData)
+    ModelStatusBar(uiState, onUpdateTimerData, onSwitchDataSet)
 
     // Tab navigation
     Column(
@@ -965,6 +972,7 @@ fun MainScreenPreview() {
         onUpdateConfigurationByte = { _, _ -> },
         onUpdateTimerData = { _ -> },
         onUpdateServoSettingsByte = { newSettings, position -> println("Servo settings byte updated: $newSettings at position $position") },
+        onSwitchDataSet = { newIndex -> println("Switch data set to index: $newIndex") },
         onCopyClick = {_, _ -> }
     )
 }
