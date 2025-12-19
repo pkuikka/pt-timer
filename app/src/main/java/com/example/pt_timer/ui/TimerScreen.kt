@@ -141,6 +141,10 @@ fun TimerScreen(
                         mutableStateOf(displayGridItems[index])
                     }
                     val focusManager = LocalFocusManager.current
+                    var isError by remember { mutableStateOf(false) }
+                    val maxLength: Int = if (index % 6 == 1) 4 else 3 // Default max length
+                    val minValue = 0  // Default min value
+                    val maxValue: Int = if (index % 6 == 1) 9999 else 255  // Default max value
 
                     OutlinedTextField(
                         modifier = Modifier
@@ -153,8 +157,19 @@ fun TimerScreen(
                             },
                         value = text,
                         onValueChange = { newText ->
-                            text = newText
+                            if (newText.length <= maxLength) {
+                                text = newText
+
+                                // We allow empty string while typing, but mark it as error if needed
+                                if (newText.isNotEmpty()) {
+                                    val intVal = newText.toIntOrNull()
+                                    isError = intVal == null || intVal < minValue || intVal > maxValue
+                                } else {
+                                    isError = false // Or true if empty is not allowed
+                                }
+                            }
                         },
+                        isError = isError,
                         singleLine = true,
                         textStyle = MaterialTheme.typography.bodySmall,
                         readOnly = (index < 6) || (index % 6 == 0),
@@ -164,7 +179,13 @@ fun TimerScreen(
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = {
-                                onGridItemChanged(index, text)
+                                if (!isError) {
+                                    // Use the callback passed to the Composable
+                                    onGridItemChanged(index, text)
+                                } else {
+                                    // Reset to original value from the list
+                                    text = displayGridItems[index]
+                                }
                                 focusManager.clearFocus()
                             }
                         )
