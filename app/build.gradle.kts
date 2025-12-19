@@ -25,7 +25,7 @@ android {
         versionCode = 1
 
         val majorVersion = 0
-        val minorVersion = 9
+        val minorVersion = 8
         versionCode = majorVersion * 1000 + minorVersion
         versionName = "$majorVersion.$minorVersion.${getTimestamp()}"
         val archivesBaseName = "pt-timer-${majorVersion}_${minorVersion}"
