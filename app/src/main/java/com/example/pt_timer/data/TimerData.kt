@@ -109,7 +109,8 @@ data class TimerData(
     val usedDt: Int = 0, // Counts together configured DT time + DIP switches
 
     // Data only used in the app
-    val comments: String = ""
+    val comments: String = "",
+    val setNames: List<String> = List(MAX_DATA_SETS) { "" },
 ) {
 
     // --- Configuration byte Booleans ---

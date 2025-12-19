@@ -404,13 +404,14 @@ fun ModelStatusBar(
             ) {
                 // This is the TextField part of the dropdown
                 OutlinedTextField(
-                    value = uiState.timerData.modelSet.toString(),
+                    value = uiState.timerData.modelSet.toString() + " " + uiState.timerData.setNames[uiState.timerData.modelSet],
                     onValueChange = {}, // onValueChange is not needed for a read-only dropdown
                     readOnly = true,
                     label = { Text("Set") },
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = isSetExpanded)
                     },
+                    singleLine = true,
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                     modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
                 )
@@ -423,7 +424,7 @@ fun ModelStatusBar(
                     // Create a list of numbers from 0 to MAX_DATA_SETS - 1
                     (0 until MAX_DATA_SETS).forEach { selectionIndex ->
                         DropdownMenuItem(
-                            text = { Text(selectionIndex.toString()) },
+                            text = { Text("$selectionIndex ${uiState.timerData.setNames[selectionIndex]}") },
                             onClick = {
                                 // When an item is clicked, update the state
                                 onUpdateTimerData { copy(modelSet = selectionIndex) }
