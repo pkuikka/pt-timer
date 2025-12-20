@@ -77,7 +77,6 @@ fun CommonField(
                 focusManager.clearFocus()
             }
         ),
-        // 2. APPLY the modifier, chaining it with your specific modifiers
         modifier = modifier
             .padding(1.dp)
             .height(height)

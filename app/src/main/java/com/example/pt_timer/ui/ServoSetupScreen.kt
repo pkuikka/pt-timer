@@ -3,7 +3,6 @@ package com.example.pt_timer.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -50,7 +49,7 @@ fun ServoSetupScreen(
             .verticalScroll(rememberScrollState())
             .padding(dimensionResource(R.dimen.padding_small)),
     ) {
-        Row(modifier = modifier.fillMaxWidth()) {
+        Row {
             Column(modifier = modifier.width(100.dp)) {
                 Text(
                     text = " Servo\n name",
@@ -155,31 +154,26 @@ fun ServoSetupScreen(
 
                 else -> {}
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ServoDataRow(
-                    name = name,
-                    midPos = midPos,
-                    range = range,
-                    onDoneActionName = onDoneActionName,
-                    onDoneActionMidPos = onDoneActionMidPos,
-                    onDoneActionRange = onDoneActionRange,
-                    inUseValue = inUse,
-                    inUseValueChange = { isChecked ->
-                        onUpdateServoSettingsByte(isChecked, inUseBit)
-                    },
-                    reversedValue = reversed,
-                    reversedValueChange = { isChecked ->
-                        onUpdateServoSettingsByte(isChecked, reversedBit)
-                    }
-                )
-            }
+            ServoDataRow(
+                name = name,
+                midPos = midPos,
+                range = range,
+                onDoneActionName = onDoneActionName,
+                onDoneActionMidPos = onDoneActionMidPos,
+                onDoneActionRange = onDoneActionRange,
+                inUseValue = inUse,
+                inUseValueChange = { isChecked ->
+                    onUpdateServoSettingsByte(isChecked, inUseBit)
+                },
+                reversedValue = reversed,
+                reversedValueChange = { isChecked ->
+                    onUpdateServoSettingsByte(isChecked, reversedBit)
+                }
+            )
         }
 
         // --- Copy 1 set to another
-        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -332,6 +326,9 @@ fun ServoDataRow(
     reversedValue: Boolean,
     reversedValueChange: (Boolean) -> Unit
 ) {
+    // FIX the click problems on release builds for servo rows 1-3
+    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically

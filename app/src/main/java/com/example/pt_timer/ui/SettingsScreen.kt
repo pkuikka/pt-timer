@@ -164,7 +164,7 @@ fun SettingsScreen(
         }
         if (modelType == 5) {
             RowWithField(
-                "If limiter cut, jump to line #",
+                "Limiter cut, jump to line #",
                 "${uiState.timerData.skipBuntGoToRow}",
                 onDoneAction = { newValue ->
                     onUpdateTimerData { copy(skipBuntGoToRow = newValue.toIntOrNull() ?: 0) }
@@ -182,9 +182,6 @@ fun SettingsScreen(
             style = typography.titleMedium
         )
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
-        RowWithText("Version ${uiState.timerData.timerVersion}")
-        RowWithText("Maximum data lines ${uiState.timerData.maxDataRows}")
-        RowWithText("Name label index ${uiState.timerData.firstIndexForDataSetName}")
         RowWithField(
             "Wake up count",
             "${uiState.timerData.startUpCycleCount}",
@@ -192,6 +189,10 @@ fun SettingsScreen(
                 onUpdateTimerData { copy(startUpCycleCount = newValue.toIntOrNull() ?: 0) }
             }
         )
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
+        RowWithText("Version ${uiState.timerData.timerVersion}")
+        RowWithText("Maximum data lines ${uiState.timerData.maxDataRows}")
+        RowWithText("Name label index ${uiState.timerData.firstIndexForDataSetName}")
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
