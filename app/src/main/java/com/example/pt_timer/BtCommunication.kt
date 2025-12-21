@@ -46,7 +46,7 @@ class BtCommunication(private val context: Context) {
     private var btSerialOutputStream: OutputStream? = null
     private var workerThread: Thread? = null
 
-    private val PERMISSION_REQUEST_CODE = 1001
+    private val permissionRequestCode = 1001
 
     // Function to check if all necessary Bluetooth permissions are granted
     fun checkBlePermissions(): Boolean {
@@ -73,7 +73,7 @@ class BtCommunication(private val context: Context) {
             ActivityCompat.requestPermissions(
                 context,
                 permissionsToRequest.toTypedArray(),
-                PERMISSION_REQUEST_CODE
+                permissionRequestCode
             )
         }
         return false
@@ -82,20 +82,6 @@ class BtCommunication(private val context: Context) {
     private fun addPermissionIfNeeded(permissionsToRequest: MutableList<String>, permission: String) {
         if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
             permissionsToRequest.add(permission)
-        }
-    }
-
-    fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                // Permissions granted, proceed with Bluetooth operations
-                Log.d("Permissions", "Bluetooth permissions granted")
-            } else {
-                // Permissions denied, inform the user
-                Toast.makeText(context, "Bluetooth permissions are required", Toast.LENGTH_SHORT).show()
-            }
         }
     }
 
