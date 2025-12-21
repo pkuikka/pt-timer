@@ -6,10 +6,10 @@ import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 
 const val MAX_TIMER_DATA_ROWS = 16
 const val MAX_DATA_SETS = 10
-const val NAME_START_POSITION = 160
-const val NAME_END_POSITION = 210
-const val TIMESTAMP_START_POSITION = 211
-const val TIMESTAMP_END_POSITION = 220
+const val NAME_START_POSITION = 170
+const val NAME_END_POSITION = 220
+const val TIMESTAMP_START_POSITION = 160
+const val TIMESTAMP_END_POSITION = 169
 const val MAX_TIME_TENTHS_LIMIT = 25
 const val TIMER_TYPE_F1B = 1
 const val TIMER_TYPE_F1A = 2
@@ -68,7 +68,7 @@ data class TimerData(
     val timerCalibrationInMicroseconds1: Int = 1, // 32 - 33 = Timer calibration in microseconds
     val timerCalibrationInMicroseconds2: Int = 150, // 32 - 33 = Timer calibration in microseconds
     val maxDataRows: Int = MAX_TIMER_DATA_ROWS, // 34 = Maximum amount of data rows
-    val firstIndexForDataSetName: Int = 160, // 35 = First index for data set name
+    val firstIndexForDataSetName: Int = NAME_START_POSITION, // 35 = First index for data set name
     val maxTimeForSkippingBunt: Int = 80, // 36 =  F1A: max time for skipping bunt
     val minTimeForSkippingBunt: Int = 0, // 37 =  F1A: min time for skipping bunt (if 0, never skip)
     val skipBuntGoToRow: Int = 8, // 38 =  F1A: go to this line when skipping bunt
@@ -87,8 +87,8 @@ data class TimerData(
     val servo4Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 128 },
     val stepValues: List<Int> = List(MAX_TIMER_DATA_ROWS) { 0 },
 
-    val modelName: String = "Default Name", // 160 - 210 = Data set name (extended to bigger by reducing rows, default 23 rows gives 202)
-    val writeTimeStamp: String = "2501010101", // 211 - 220 = Last write timestamp
+    val writeTimeStamp: String = "2501010101", // 160 - 169 = Last write timestamp
+    val modelName: String = "Default Name", // 170 - 220 = Data set name (extended to bigger by reducing rows, default 23 rows gives 202)
     val servo1Label: String = "Servo 1", // 221 - 222 = Servo 1 label
     val servo2Label: String = "Servo 2", // 223 - 224 = Servo 2 label
     val servo3Label: String = "Servo 3", // 225 - 226 = Servo 3 label
@@ -211,7 +211,7 @@ data class TimerData(
 
                 // Single byte values
                 maxDataRows = minOf(getUnsignedByte(34), MAX_TIMER_DATA_ROWS), // reset max data rows to new max value if bigger
-                firstIndexForDataSetName = minOf(getUnsignedByte(35), NAME_START_POSITION),  // reset mode name position to new max value if bigger
+                firstIndexForDataSetName = NAME_START_POSITION,  // reset mode name position to new value
                 maxTimeForSkippingBunt = getUnsignedByte(36),
                 minTimeForSkippingBunt = getUnsignedByte(37),
                 skipBuntGoToRow = getUnsignedByte(38),
@@ -229,8 +229,8 @@ data class TimerData(
 
 
                 // String values read from specific ranges
-                modelName = readString(oldFirstIndexForDataSetName..NAME_END_POSITION).trimEnd(),
                 writeTimeStamp = readString(TIMESTAMP_START_POSITION..TIMESTAMP_END_POSITION),
+                modelName = readString(oldFirstIndexForDataSetName..NAME_END_POSITION).trimEnd(),
                 servo1Label = readString(221..222),
                 servo2Label = readString(223..224),
                 servo3Label = readString(225..226),
@@ -447,8 +447,8 @@ data class TimerData(
         }
 
         // String properties
-        setString(firstIndexForDataSetName..NAME_END_POSITION, modelName)
         setString(TIMESTAMP_START_POSITION..TIMESTAMP_END_POSITION, writeTimeStamp)
+        setString(firstIndexForDataSetName..NAME_END_POSITION, modelName)
         setString(221..222, servo1Label)
         setString(223..224, servo2Label)
         setString(225..226, servo3Label)
