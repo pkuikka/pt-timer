@@ -3,13 +3,15 @@ package com.example.pt_timer.data
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonIgnoreUnknownKeys
+import kotlin.Int
 
 const val MAX_TIMER_DATA_ROWS = 16
 const val MAX_DATA_SETS = 10
-const val NAME_START_POSITION = 170
-const val NAME_END_POSITION = 220
 const val TIMESTAMP_START_POSITION = 160
 const val TIMESTAMP_END_POSITION = 169
+const val NAME_START_POSITION = 170
+const val NAME_START_POSITION_FOR_SMALL_TIMERS = 214
+const val NAME_END_POSITION = 220
 const val MAX_TIME_TENTHS_LIMIT = 25
 const val TIMER_TYPE_F1B = 1
 const val TIMER_TYPE_F1A = 2
@@ -178,8 +180,8 @@ data class TimerData(
 
             // Warn user about too many used rows or step usage
             val stepValuesInUse = stepValues.any { it > 0 }
-            val needsWarning = ((getUnsignedByte(34) > MAX_TIMER_DATA_ROWS) ||
-                    stepValuesInUse || getUnsignedByte(1) in intArrayOf(3,4,6))
+            val needsWarning = (getUnsignedByte(34) > MAX_TIMER_DATA_ROWS ||
+                    stepValuesInUse) && getUnsignedByte(1) in intArrayOf(1,2,5)
 
             // --- Map each byte to its corresponding property ---
             val timerData = TimerData(
@@ -211,7 +213,8 @@ data class TimerData(
 
                 // Single byte values
                 maxDataRows = minOf(getUnsignedByte(34), MAX_TIMER_DATA_ROWS), // reset max data rows to new max value if bigger
-                firstIndexForDataSetName = NAME_START_POSITION,  // reset mode name position to new value
+                firstIndexForDataSetName = if (oldFirstIndexForDataSetName == 214)
+                    NAME_START_POSITION_FOR_SMALL_TIMERS else NAME_START_POSITION,  // reset mode name position to new value
                 maxTimeForSkippingBunt = getUnsignedByte(36),
                 minTimeForSkippingBunt = getUnsignedByte(37),
                 skipBuntGoToRow = getUnsignedByte(38),
@@ -230,7 +233,7 @@ data class TimerData(
 
                 // String values read from specific ranges
                 writeTimeStamp = readString(TIMESTAMP_START_POSITION..TIMESTAMP_END_POSITION),
-                modelName = readString(oldFirstIndexForDataSetName..NAME_END_POSITION).trimEnd(),
+                modelName = readString(oldFirstIndexForDataSetName.. NAME_END_POSITION).trimEnd(),
                 servo1Label = readString(221..222),
                 servo2Label = readString(223..224),
                 servo3Label = readString(225..226),
@@ -312,13 +315,13 @@ data class TimerData(
 
                 TIMER_TYPE_P30 -> {
                     defaultTimerData.copy(
-                        modelType = timerType,
+                        modelType = TIMER_TYPE_P30,
                         modelName = "P-30 Timer Example",
                         configurationByte = 4.toByte(),
                         servoSettingsByte = 224.toByte(),
                         numberOfDataRows = 5,
                         maxDataRows = 7,
-                        firstIndexForDataSetName = 85,
+                        firstIndexForDataSetName = 214,
                         servo1Label = "S1",
                         servo2Label = "--",
                         servo3Label = "--",
@@ -327,18 +330,21 @@ data class TimerData(
                         row2Label = "ARM  ",
                         row3Label = "START",
                         row4Label = "     ",
+                        timerCalibrationInMilliseconds = 170,
+                        timerCalibrationInMicroseconds1 = 0,
+                        timerCalibrationInMicroseconds2 = 0,
                     )
                 }
 
                 TIMER_TYPE_E36 -> {
                     defaultTimerData.copy(
-                        modelType = timerType,
+                        modelType = TIMER_TYPE_E36,
                         modelName = "E-36 Timer Example",
                         configurationByte = 4.toByte(),
                         servoSettingsByte = 192.toByte(),
                         numberOfDataRows = 5,
                         maxDataRows = 7,
-                        firstIndexForDataSetName = 85,
+                        firstIndexForDataSetName = 214,
                         servo1Label = "SC",
                         servo2Label = "S1",
                         servo3Label = "--",
@@ -347,7 +353,10 @@ data class TimerData(
                         row2Label = "ARM  ",
                         row3Label = "START",
                         row4Label = "     ",
-                    )
+                        timerCalibrationInMilliseconds = 120,
+                        timerCalibrationInMicroseconds1 = 0,
+                        timerCalibrationInMicroseconds2 = 0,
+                        )
                 }
 
                 else -> {

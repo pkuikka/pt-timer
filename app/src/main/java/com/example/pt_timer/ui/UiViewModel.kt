@@ -151,12 +151,12 @@ class UiViewModel(
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_CONNECT)
     fun write() {
-        val currentTimerData = _uiState.value.timerData
-
         // Update write timestamp before writing it to timer
         val newTimeStamp = SimpleDateFormat("yyMMddHHmm", Locale.US).format(Date())
         updateTimerData { copy(writeTimeStamp = newTimeStamp) }
 
+        // Take timer data only after updating the write time
+        val currentTimerData = _uiState.value.timerData
         val packetToSend = currentTimerData.toPacket()
 
         btCommunication.connectDevice(selectedDevice = uiState.value.selectedBtDevice) { isSuccess ->
@@ -408,7 +408,7 @@ class UiViewModel(
             // Use the factory function to create the TimerData object
             val (newTimerData, needsWarning)  = TimerData.fromPacket(packetBytes)
 
-            Log.i("DataParsing", "Updated data: $newTimerData")
+            Log.i("UiViewModel", "Updated data: $newTimerData")
 
             // Update the UI state with the newly parsed data
             _uiState.update { currentState ->
@@ -419,15 +419,15 @@ class UiViewModel(
 
             // If a warning is needed, update the dialog state
             if (needsWarning) {
-                Log.w("DataParsing", "Old data format detected, flagging warning dialog.")
+                Log.w("UiViewModel", "Old data format detected, flagging warning dialog.")
                 _showOldDataWarningDialog.value = true
             }
         } catch (e: IllegalArgumentException) {
             // Handle the case where the packet is the wrong size
-            Log.e("DataParsing", "Received invalid packet: ${e.message}")
+            Log.e("UiViewModel", "Received invalid packet: ${e.message}")
         } catch (e: Exception) {
             // Handle any other potential parsing errors
-            Log.e("DataParsing", "Failed to parse timer data packet.", e)
+            Log.e("UiViewModel", "Failed to parse timer data packet.", e)
         }
     }
 
