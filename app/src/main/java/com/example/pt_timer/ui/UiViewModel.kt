@@ -76,7 +76,9 @@ class UiViewModel(
     fun getSavedFilesList() {
         val internalDir = applicationContext.filesDir
         val files = internalDir.listFiles { _, name -> name.endsWith(".json") }
-            ?.map { it.name } ?: emptyList()
+            ?.map { it.name }
+            ?.sorted()
+            ?: emptyList()
         _uiState.update { it.copy(savedFiles = files) }
     }
 
