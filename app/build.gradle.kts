@@ -1,6 +1,7 @@
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.android.build.api.dsl.ApplicationExtension
 
 fun getTimestamp(): String {
     val sdf = SimpleDateFormat("yyMMddHH", Locale.US)
@@ -9,12 +10,22 @@ fun getTimestamp(): String {
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.plugin.serialization")
+    alias(libs.plugins.kotlin.serialization)
 }
 
-android {
+val majorVersion = 0
+val minorVersion = 9
+
+base {
+    archivesName.set("pt-timer-${majorVersion}_${minorVersion}")
+}
+
+kotlin {
+    jvmToolchain(17)
+}
+
+extensions.configure<ApplicationExtension> {
     namespace = "com.example.pt_timer"
     compileSdk = 36
 
@@ -22,44 +33,29 @@ android {
         applicationId = "com.example.pt_timer"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
 
-        val majorVersion = 0
-        val minorVersion = 9
         versionCode = majorVersion * 1000 + minorVersion
         versionName = "$majorVersion.$minorVersion.${getTimestamp()}"
-        val archivesBaseName = "pt-timer-${majorVersion}_${minorVersion}"
-        setProperty("archivesBaseName", archivesBaseName)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            // Enables code shrinking, obfuscation, and optimization for your release build.
             isMinifyEnabled = true
-            // Enables resource shrinking, which removes unused resources.
             isShrinkResources = true
-
-            // Specifies the ProGuard rules files.
-            // 'proguard-android-optimize.txt' is a default file from the Android SDK.
-            // 'proguard-rules.pro' is a file in your app's root directory for custom rules.
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
         debug {
-            // This will make it possible to install debug and release versions side by side
             applicationIdSuffix = ".debug"
         }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlin {
-        jvmToolchain(17) // Use 17 for modern Android development
     }
     buildFeatures {
         compose = true
