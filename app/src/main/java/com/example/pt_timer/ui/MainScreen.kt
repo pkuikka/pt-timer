@@ -1,6 +1,5 @@
 package com.example.pt_timer.ui
 
-// ... other imports
 import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -34,7 +33,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PrimaryTabRow
@@ -419,7 +418,7 @@ fun ModelStatusBar(
                     },
                     singleLine = true,
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
+                    modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                 )
 
                 // This is the actual dropdown menu with the list of items
@@ -692,7 +691,7 @@ fun BottomButtonsPanel(
                 } else {
                     OutlinedTextField(
                         modifier = Modifier
-                            .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true)
                             .fillMaxWidth(),
                         value = if (btDeviceList.isNotEmpty()) selectedDevice else "Select BT Device",
                         onValueChange = {},
@@ -976,4 +975,3 @@ fun MainScreenPreview() {
         onCopyClick = {_, _ -> }
     )
 }
-
