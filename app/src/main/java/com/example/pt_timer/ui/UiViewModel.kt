@@ -166,7 +166,7 @@ class UiViewModel(
                 btCommunication.timerCommunication(
                     packetToSend = packetToSend,
                     writeDelay = uiState.value.writeCommunicationDelay.toLong(),
-                    onDataReceived = { }, // NO UI updates on write operations
+                    onDataReceived = { processIncomingPacket(it, updateOnlyReadings = true) },
                     onConfirmationRequired = { message, onConfirm, onCancel ->
                         onConfirmWriteAction = onConfirm
                         onCancelWriteAction = onCancel
@@ -405,7 +405,7 @@ class UiViewModel(
         _showOldDataWarningDialog.value = false
     }
 
-    private fun processIncomingPacket(packetBytes: ByteArray) {
+    private fun processIncomingPacket(packetBytes: ByteArray, updateOnlyReadings: Boolean = false) {
         try {
             // Use the factory function to create the TimerData object
             val (newTimerData, needsWarning)  = TimerData.fromPacket(packetBytes)
@@ -414,13 +414,27 @@ class UiViewModel(
 
             // Update the UI state with the newly parsed data
             _uiState.update { currentState ->
-                currentState.copy(timerData = newTimerData)
+                if (updateOnlyReadings) {
+                    // Update ONLY the readings (battery, temp, etc.) and keep other data intact
+                    currentState.copy(
+                        timerData = currentState.timerData.copy(
+                            batteryVoltage = newTimerData.batteryVoltage,
+                            batteryLowestVoltage = newTimerData.batteryLowestVoltage,
+                            currentTemperature = newTimerData.currentTemperature,
+                            usedDt = newTimerData.usedDt
+                        )
+                    )
+                } else {
+                    currentState.copy(timerData = newTimerData)
+                }
             }
-            loadCommentForModel(newTimerData.modelName)
-            loadSetsForModel(newTimerData.modelName)
+            if (!updateOnlyReadings) {
+                loadCommentForModel(newTimerData.modelName)
+                loadSetsForModel(newTimerData.modelName)
+            }
 
             // If a warning is needed, update the dialog state
-            if (needsWarning) {
+            if (needsWarning && !updateOnlyReadings) {
                 Log.w("UiViewModel", "Old data format detected, flagging warning dialog.")
                 _showOldDataWarningDialog.value = true
             }
@@ -913,4 +927,3 @@ class UiViewModel(
         }
     }
 }
-

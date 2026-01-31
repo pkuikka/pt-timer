@@ -3,7 +3,6 @@ package com.example.pt_timer
 import android.Manifest
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
@@ -21,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -79,8 +79,15 @@ class BtCommunication(private val context: Context) {
         return false
     }
 
-    private fun addPermissionIfNeeded(permissionsToRequest: MutableList<String>, permission: String) {
-        if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+    private fun addPermissionIfNeeded(
+        permissionsToRequest: MutableList<String>,
+        permission: String
+    ) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                permission
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             permissionsToRequest.add(permission)
         }
     }
@@ -135,42 +142,60 @@ class BtCommunication(private val context: Context) {
             }
         }
 
-        if (selectedDevice == "") {
-            toastAndLog("No BlueTooth device selected.", logLevel = "Log.w")
-            onConnectionResult(false)
-            return
-        }
-
-        val pairedDevices: Set<BluetoothDevice>? = bluetoothAdapter.bondedDevices
-        val deviceToConnect = pairedDevices?.find { it.name == selectedDevice }
-
-        if (deviceToConnect == null) {
-            Log.w(TAG, "Device '$selectedDevice' not found in paired devices.")
-            onConnectionResult(false)
-            return
-        }
-
-        toastAndLog(message = "Connecting to device ${deviceToConnect.name} at ${deviceToConnect.address}...")
-        val socket: BluetoothSocket? = deviceToConnect.createRfcommSocketToServiceRecord(SPP_UUID)
-
         scope.launch {
+            if (selectedDevice == "") {
+                toastAndLog("No BlueTooth device selected.", logLevel = "Log.w")
+                onConnectionResult(false)
+                return@launch
+            }
+
+            // 1. Timeout for bondedDevices lookup (5 seconds)
+            val deviceToConnect = withTimeoutOrNull(5000) {
+                bluetoothAdapter.bondedDevices.find { it.name == selectedDevice }
+            }
+
+            if (deviceToConnect == null) {
+                toastAndLog(
+                    "ERROR: Device '$selectedDevice' lookup timed out or not found.",
+                    logLevel = "Log.e"
+                )
+                onConnectionResult(false)
+                return@launch
+            }
+
+            toastAndLog(message = "Connecting to device ${deviceToConnect.name} at ${deviceToConnect.address}...")
+
             try {
-                mmServerSocket = socket
-                mmServerSocket?.connect()
-                btSerialOutputStream = mmServerSocket?.outputStream
-                btSerialInputStream = mmServerSocket?.inputStream
-                onConnectionResult(true)
-            } catch (_: IOException) {
-                Handler(Looper.getMainLooper()).post {
+                // 2. Timeout for the actual connection attempt (10 seconds)
+                val isConnected = withTimeoutOrNull(10000) {
+                    try {
+                        val socket: BluetoothSocket? =
+                            deviceToConnect.createRfcommSocketToServiceRecord(SPP_UUID)
+                        mmServerSocket = socket
+                        mmServerSocket?.connect()
+                        true
+                    } catch (e: IOException) {
+                        Log.e(TAG, "Socket connection failed", e)
+                        false
+                    }
+                } ?: false
+
+                if (isConnected) {
+                    btSerialOutputStream = mmServerSocket?.outputStream
+                    btSerialInputStream = mmServerSocket?.inputStream
+                    onConnectionResult(true)
+                } else {
                     toastAndLog(
-                        message = "ERROR: Could not connect BT device $deviceToConnect socket!",
+                        "ERROR: Connection to ${deviceToConnect.name} timed out or failed.",
                         logLevel = "Log.e"
                     )
+                    onConnectionResult(false)
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error during connection", e)
                 onConnectionResult(false)
             }
         }
-        return
     }
 
     fun timerCommunication(
@@ -186,9 +211,7 @@ class BtCommunication(private val context: Context) {
             convertBytes[index].toInt() and 0xFF
 
         if (btSerialInputStream == null || btSerialOutputStream == null) {
-            Handler(Looper.getMainLooper()).post {
-                toastAndLog("ERROR: BT serial streams are not connected!")
-            }
+            toastAndLog("ERROR: BT serial streams are not connected!")
             return
         }
         workerThread = Thread {
@@ -214,12 +237,9 @@ class BtCommunication(private val context: Context) {
                             val buffer = String(packetBytes, charset("utf-8"))
                             Log.i(TAG, "Bytes available: 263, Buffer: $buffer")
 
-                            Handler(Looper.getMainLooper()).post {
-                                toastAndLog("Timer read.")
-                            }
-
                             // We must post it to the main thread to be safe
                             if (packetToSend == null) {  // only send in read mode
+                                toastAndLog("Timer read.")
                                 Handler(Looper.getMainLooper()).post {
                                     val processedPacket = packetBytes.drop(1).toByteArray()
                                     onDataReceived(processedPacket)
@@ -239,11 +259,23 @@ class BtCommunication(private val context: Context) {
                                 val writeModelSet = getUnsignedByte(3, packetToSend)
 
                                 if (currentModelId == writeModelId && currentModelType == writeModelType && currentModelSet == writeModelSet) {
+                                    toastAndLog("Timer read and model validation OK. Writing...")
                                     Log.i(
                                         TAG,
                                         "All ok: Model type $writeModelType and model ID $writeModelId and model set $writeModelSet"
                                     )
-                                    writeData(packetBytes = packetToSend, writeDelay = writeDelay)
+                                    val writeResult = writeData(
+                                        packetBytes = packetToSend,
+                                        writeDelay = writeDelay
+                                    )
+
+                                    if (writeResult != "") {
+                                        Handler(Looper.getMainLooper()).post {
+                                            // Pass the current packet (containing battery/temp readings) back to UI
+                                            onDataReceived(currentPacket)
+                                        }
+                                    }
+
                                     cancel()
                                     stopWorker = true
                                 } else {
@@ -257,10 +289,16 @@ class BtCommunication(private val context: Context) {
                                             warningMessage,
                                             {
                                                 scope.launch {
-                                                    writeData(
+                                                    val writeResult = writeData(
                                                         packetBytes = packetToSend,
                                                         writeDelay = writeDelay
                                                     )
+                                                    if (writeResult != "") {
+                                                        Handler(Looper.getMainLooper()).post {
+                                                            // Pass the current packet (containing battery/temp readings) back to UI
+                                                            onDataReceived(currentPacket)
+                                                        }
+                                                    }
                                                     cancel()
                                                 }
                                             },
@@ -284,13 +322,10 @@ class BtCommunication(private val context: Context) {
                     if (retryCount > 100) {  // Abort after 20s of trying
                         val packetBytes = ByteArray(bytesAvailable)
                         btSerialInputStream!!.read(packetBytes) // Empty buffer always
-                        Handler(Looper.getMainLooper()).post {
-                            toastAndLog(
-                                message = "ERROR: Timer communication failed! " +
-                                        "Bytes available: $bytesAvailable, " +
-                                        "Buffer: $packetBytes", logLevel = "Log.e"
-                            )
-                        }
+                        toastAndLog(message = "ERROR: Timer communication failed! " +
+                                              "Bytes available: $bytesAvailable, " +
+                                              "Buffer: $packetBytes", logLevel = "Log.e"
+                        )
                         cancel()
                         stopWorker = true
                     }
@@ -319,15 +354,9 @@ class BtCommunication(private val context: Context) {
         // Note thet we are skipping the 0 position in the array.
         for (i in 1..252) {  //if this is 251 it doesn't complete and crashes?
             val value: Int = packetBytes[i].toInt()
-            /*if (i < 4) {
-                Handler(Looper.getMainLooper()).post {
-                    toastAndLog("Writing $i...$value")
-                }
-            }*/
-            if (i.mod(moduloForWriteMessages) == 0) {
-                Handler(Looper.getMainLooper()).post {
-                    toastAndLog("Writing $i")
-                }
+
+            if ((i == 1) || (i.mod(moduloForWriteMessages) == 0)) {
+                  toastAndLog("Writing $i")
             }
             btSerialOutputStream!!.write(value)
             btSerialOutputStream!!.flush()
@@ -349,41 +378,45 @@ class BtCommunication(private val context: Context) {
             val dataAfterWrite = ByteArray(bytesAvailableAfterWrite)
             btSerialInputStream!!.read(dataAfterWrite) // Empty buffer always
 
-            // Convert data to integer string
+            // Convert data to integer string and verify it is the same as the sent one
             for (i in 0..250) {
                 writeDataString = writeDataString + dataAfterWrite[i].toInt().toString() + ","
+                if (packetBytes[i+1] != dataAfterWrite[i]) {
+                    writeDataString = ""
+                    toastAndLog("Write verification failed!\nByte $i doesn't match: " +
+                            "${packetBytes[i+1]} != ${dataAfterWrite[i]}", logLevel = "Log.e"
+                    )
+                    return writeDataString
+                }
             }
-            Handler(Looper.getMainLooper()).post {
-                toastAndLog("Write successful!")
-            }
+            toastAndLog("Write successful!")
         } else {
             writeDataString = ""
-            Handler(Looper.getMainLooper()).post {
-                toastAndLog(
-                    "Write verification failed! Only bytes available: " +
-                            "$bytesAvailableAfterWrite", logLevel = "Log.e"
-                )
-            }
+            toastAndLog("Write verification failed! Only bytes available: " +
+                        "$bytesAvailableAfterWrite", logLevel = "Log.e"
+            )
         }
         return writeDataString
     }
 
 
     private fun toastAndLog(message: String, logLevel: String = "Log.i") {
-        when (logLevel) {
-            "Log.e" -> {
-                Log.e(TAG, message)
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-            }
+        Handler(Looper.getMainLooper()).post {
+            when (logLevel) {
+                "Log.e" -> {
+                    Log.e(TAG, message)
+                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                }
 
-            "Log.w" -> {
-                Log.w(TAG, message)
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-            }
+                "Log.w" -> {
+                    Log.w(TAG, message)
+                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                }
 
-            else -> {
-                Log.i(TAG, message)
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                else -> {
+                    Log.i(TAG, message)
+                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

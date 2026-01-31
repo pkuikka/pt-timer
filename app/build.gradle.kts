@@ -14,8 +14,8 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-val majorVersion = 0
-val minorVersion = 9
+val majorVersion = 1
+val minorVersion = 0
 
 base {
     archivesName.set("pt-timer-${majorVersion}_${minorVersion}")
@@ -79,9 +79,9 @@ dependencies {
     //noinspection UseTomlInstead (needed for older Android versions)
     implementation("androidx.datastore:datastore-preferences:1.2.0")
     //noinspection UseTomlInstead (needed for older Android versions)
-    implementation("androidx.navigation:navigation-compose:2.9.6")
+    implementation("androidx.navigation:navigation-compose:2.9.7")
     //noinspection UseTomlInstead (needed for older Android versions)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
     //noinspection UseTomlInstead (needed for older Android versions)
     implementation("androidx.documentfile:documentfile:1.1.0")
 
