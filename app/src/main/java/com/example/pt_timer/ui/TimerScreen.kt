@@ -35,7 +35,7 @@ fun TimerScreen(
     modifier: Modifier = Modifier
 ) {
     val displayGridItems = remember(uiState.timerData) {
-        // This remember block re-calculates 'displayGridItems'
+        // This remembers block re-calculates 'displayGridItems'
         // only when 'timerData' changes.
         val columnHeaders = listOf(
             "",
@@ -141,6 +141,7 @@ fun TimerScreen(
                         mutableStateOf(displayGridItems[index])
                     }
                     val focusManager = LocalFocusManager.current
+                    var hasHadFocus by remember { mutableStateOf(false) }
                     var isError by remember { mutableStateOf(false) }
                     val maxLength: Int = if (index % 6 == 1) 4 else 3 // Default max length
                     val minValue = 0  // Default min value
@@ -151,25 +152,38 @@ fun TimerScreen(
                             .padding(1.dp) // Add a little padding around each field
                             .height(48.dp) // Set a fixed height for alignment
                             .onFocusChanged { focusState ->
-                                if (!focusState.isFocused) {
-                                    onGridItemChanged(index, text)
+                                if (focusState.isFocused) {
+                                    hasHadFocus = true
+                                }
+                                // Only call the update if it's losing focus AND it actually had focus previously
+                                if (!focusState.isFocused && hasHadFocus) {
+                                    // breaks editing in Finnish language Android as there presentation is with comma
+                                    val sanitizedText = if (index % 6 == 1) text.replace(',', '.') else text
+                                    text = sanitizedText
+                                    // Optional: Only call if text actually changed
+                                    if (text != displayGridItems[index]) {
+                                        onGridItemChanged(index, sanitizedText)
+                                    }
+                                    hasHadFocus = false // Reset after saving
                                 }
                             },
                         value = text,
                         onValueChange = { newText ->
                             if (newText.length <= maxLength) {
+                                val sanitizedText = if (index % 6 == 1) newText.replace(',', '.') else newText
                                 text = newText
 
                                 // We allow empty string while typing, but mark it as error if needed
-                                if (newText.isNotEmpty()) {
+                                if (sanitizedText.isNotEmpty()) {
                                     // Check if this is the "Time" column (Index 1)
                                     if (index % 6 == 1) {
-                                        val doubleVal = newText.toDoubleOrNull()
+                                        // breaks editing in Finnish language Android as there presentation is with comma
+                                        val doubleVal = sanitizedText.toDoubleOrNull()
                                         // Check against bounds (auto-converts Int bounds to Double for comparison)
                                         isError = doubleVal == null || doubleVal < minValue || doubleVal > maxValue
                                     } else {
                                         // Servo columns must be Integers
-                                        val intVal = newText.toIntOrNull()
+                                        val intVal = sanitizedText.toIntOrNull()
                                         isError = intVal == null || intVal < minValue || intVal > maxValue
                                     }
                                 } else {
@@ -188,8 +202,10 @@ fun TimerScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 if (!isError) {
+                                    val sanitizedText = if (index % 6 == 1) text.replace(',', '.') else text
+                                    text = sanitizedText
                                     // Use the callback passed to the Composable
-                                    onGridItemChanged(index, text)
+                                    onGridItemChanged(index, sanitizedText)
                                 } else {
                                     // Reset to original value from the list
                                     text = displayGridItems[index]

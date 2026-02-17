@@ -62,7 +62,7 @@ data class TimerData(
     val servoRange: List<Int> = List(4) { 127 }, // 15 - 18 = Servo 1 - 4 range
     val motorRunTime1: Int = 0,  // Motor run time byte #1
     val motorRunTime2: Int = 0,  // and byte #2
-    val servoTemperatureMidPosition: List<Int> = List(4) { 127 }, // 21 - 24 = Servo 1 - 4 temperature correction mid position
+    val servoTemperatureMidPosition: List<Int> = List(4) { 127 }, // 21 - 24 = Servo 1 - 4 temperature correction mid-position
     val servoTemperatureRange: List<Int> = List(4) { 127 }, // 25 - 28 = Servo 1 - 4 temperature range
     val empty29: Int = 0,  // 29, 30 =  empty / reserve
     val empty30: Int = 0,
@@ -81,7 +81,7 @@ data class TimerData(
     // 48 + 7 = Row 2 time, step lines, and values for servos 1 - 4
     //   ...
     // 209 + 7 = Row 25 time, step lines, and values for servos 1 - 4
-    // Map them to more easier column values and force step value always to be 0
+    // Map them to easier column values and force step value always to be 0
     val timeValues: List<Double> = List(MAX_TIMER_DATA_ROWS) { it.toDouble() },
     val servo1Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 125 },
     val servo2Values: List<Int> = List(MAX_TIMER_DATA_ROWS) { 126 },
@@ -221,7 +221,7 @@ data class TimerData(
                 dtPowerDownDelay = getUnsignedByte(39),
                 empty40 = 0,
 
-                // The main timer grid values from 41 - 131
+                // The main timer grid values from 41 to 131
                 timeValues = timeValues,
                 servo1Values = servo1Values,
                 servo2Values = servo2Values,
@@ -297,7 +297,7 @@ data class TimerData(
                 TIMER_TYPE_F1Q -> {
                     defaultTimerData.copy(
                         modelType = TIMER_TYPE_F1Q,
-                        modelName = "F1Q Timer Examole",
+                        modelName = "F1Q Timer Example",
                         configurationByte = 4.toByte(),
                         servoSettingsByte = 0.toByte(),
                         numberOfDataRows = 6,
