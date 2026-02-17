@@ -149,16 +149,24 @@ class BtCommunication(private val context: Context) {
                 return@launch
             }
 
-            // 1. Timeout for bondedDevices lookup (5 seconds)
-            val deviceToConnect = withTimeoutOrNull(5000) {
-                bluetoothAdapter.bondedDevices.find { it.name == selectedDevice }
+            // 1. Ensure we aren't discoverying (canceling discovery is often the "fix")
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED) {
+                bluetoothAdapter.cancelDiscovery()
+            }
+
+            var deviceToConnect: android.bluetooth.BluetoothDevice? = null
+
+            // 2. Retry lookup twice with a small delay
+            repeat(2) { attempt ->
+                deviceToConnect = bluetoothAdapter.bondedDevices.find { it.name == selectedDevice }
+                if (deviceToConnect == null) {
+                    Log.w(TAG, "Warning: Bonded device lookup attempt ${attempt + 1} failed.")
+                    kotlinx.coroutines.delay(5000) // Wait 1 second before retry
+                }
             }
 
             if (deviceToConnect == null) {
-                toastAndLog(
-                    "ERROR: Device '$selectedDevice' lookup timed out or not found.",
-                    logLevel = "Log.e"
-                )
+                toastAndLog("ERROR: Device '$selectedDevice' not found in paired devices.", logLevel = "Log.e")
                 onConnectionResult(false)
                 return@launch
             }
@@ -378,7 +386,7 @@ class BtCommunication(private val context: Context) {
             val dataAfterWrite = ByteArray(bytesAvailableAfterWrite)
             btSerialInputStream!!.read(dataAfterWrite) // Empty buffer always
 
-            // Convert data to integer string and verify it is the same as the sent one
+            // Convert data to integer string and verify it is the same as sent one
             for (i in 0..250) {
                 writeDataString = writeDataString + dataAfterWrite[i].toInt().toString() + ","
                 if (packetBytes[i+1] != dataAfterWrite[i]) {
